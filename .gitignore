@@ -2,8 +2,14 @@
 _build
 build
 
+# CMake
+CMakeUserPresets.json
+
 # Nanopb
 tools/nanopb/env
+
+# Test code
+_*
 
 # VS Code
 .vscode
