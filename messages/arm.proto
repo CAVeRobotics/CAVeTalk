@@ -1,7 +1,13 @@
 syntax = "proto3";
 
-package cave_talk;
+package cavetalk;
+
+enum Mode {
+    MODE_DISARMED = 0;
+    MODE_ARMED_MANUAL = 1;
+    MODE_ARMED_AUTO = 2;
+}
 
 message Arm {
-    bool arm = 1;
+    Mode mode = 1;
 }

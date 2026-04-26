@@ -1,7 +1,0 @@
-syntax = "proto3";
-
-package cave_talk;
-
-message Lights {
-    bool headlights = 1;
-}

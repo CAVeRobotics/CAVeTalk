@@ -1,0 +1,8 @@
+syntax = "proto3";
+
+package cavetalk;
+
+message Drive {
+    float speed_meters_per_second = 1;
+    float turn_rate_radians_per_second = 2;
+}

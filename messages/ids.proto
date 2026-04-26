@@ -1,22 +1,13 @@
 syntax = "proto3";
 
-package cave_talk;
+package cavetalk;
 
 enum Id {
     ID_NONE = 0;
-    ID_OOGA = 1;
-    ID_MOVEMENT = 2;
-    ID_CAMERA_MOVEMENT = 3;
-    ID_LIGHTS = 4;
-    ID_ARM = 5;
-    ID_ODOMETRY = 6;
-    ID_LOG = 7;
-    ID_CONFIG_SERVO_WHEELS = 8;
-    ID_CONFIG_SERVO_CAMS = 9;
-    ID_CONFIG_MOTOR = 10;
-    ID_CONFIG_ENCODER = 11;
-    ID_CONFIG_LOG = 12;
-    ID_CONFIG_WHEEL_SPEED_CONTROL = 13;
-    ID_CONFIG_STEERING_CONTROL = 14;
-    ID_AIR_QUALITY = 15;
+    ID_LOG = 1;
+    ID_ARM = 2;
+    ID_DRIVE = 3;
+    ID_ACCELERATION = 4;
+    ID_GYROSCOPE = 5;
+    ID_ENCODER = 6;
 }

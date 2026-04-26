@@ -1,9 +1,0 @@
-syntax = "proto3";
-
-package cave_talk;
-
-message AirQuality {
-    uint32 dust_ug_per_m3 = 1;
-    uint32 gas_ppm = 2;
-    double temperature_celsius = 3;
-}

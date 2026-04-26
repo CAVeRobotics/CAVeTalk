@@ -1,0 +1,8 @@
+syntax = "proto3";
+
+package cavetalk;
+
+message Encoder {
+    sint64 pulses = 1;
+    float rate_radians_per_second = 2;
+}
