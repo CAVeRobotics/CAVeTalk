@@ -9,5 +9,5 @@ enum Id {
     ID_DRIVE = 3;
     ID_ACCELERATION = 4;
     ID_GYROSCOPE = 5;
-    ID_ENCODER = 6;
+    ID_ENCODERS = 6;
 }
