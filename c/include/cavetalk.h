@@ -36,6 +36,7 @@ typedef struct
 typedef struct
 {
     CaveTalk_Callbacks_t callbacks;
+    CaveTalk_Message_t message;
     CaveTalk_Id_t id;
     uint8_t *buffer;
     size_t buffer_size;
@@ -58,6 +59,7 @@ static const CaveTalk_Callbacks_t kCaveTalk_CallbacksNull = {
 
 static const CaveTalk_Handle_t kCaveTalk_HandleNull = {
     .callbacks   = kCaveTalk_CallbacksNull,
+    .message     = kCaveTalk_MessageNull,
     .id          = 0U,
     .buffer      = NULL,
     .buffer_size = 0U,
@@ -69,14 +71,14 @@ extern "C"
 #endif
 
 bool CaveTalk_Initialize(CaveTalk_Handle_t *const handle, const CaveTalk_Callbacks_t *const callbacks, const CaveTalk_Id_t id, uint8_t *const buffer, const size_t buffer_size);
-bool CaveTalk_IsMessageValid(const CaveTalk_Message_t *const message);
+char *CaveTalk_GetKey(CaveTalk_Handle_t *const handle, const CaveTalk_Id_t peer_id, const cavetalk_Id key_id);
 void CaveTalk_Hear(const CaveTalk_Handle_t *const handle, const CaveTalk_Message_t message);
-CaveTalk_Message_t CaveTalk_SpeakLog(const CaveTalk_Handle_t *const handle, char *const log);
-CaveTalk_Message_t CaveTalk_SpeakArm(const CaveTalk_Handle_t *const handle, const cavetalk_Mode mode);
-CaveTalk_Message_t CaveTalk_SpeakDrive(const CaveTalk_Handle_t *const handle, const cavetalk_Drive *const drive);
-CaveTalk_Message_t CaveTalk_SpeakAcceleration(const CaveTalk_Handle_t *const handle, const cavetalk_Acceleration *const acceleration);
-CaveTalk_Message_t CaveTalk_SpeakGyroscope(const CaveTalk_Handle_t *const handle, const cavetalk_Gyroscope *const gyroscope);
-CaveTalk_Message_t CaveTalk_SpeakEncoders(const CaveTalk_Handle_t *const handle, const cavetalk_Encoders *const encoders);
+CaveTalk_Message_t *CaveTalk_SpeakLog(CaveTalk_Handle_t *const handle, char *const log);
+CaveTalk_Message_t *CaveTalk_SpeakArm(CaveTalk_Handle_t *const handle, const cavetalk_Mode mode);
+CaveTalk_Message_t *CaveTalk_SpeakDrive(CaveTalk_Handle_t *const handle, const cavetalk_Drive *const drive);
+CaveTalk_Message_t *CaveTalk_SpeakAcceleration(CaveTalk_Handle_t *const handle, const cavetalk_Acceleration *const acceleration);
+CaveTalk_Message_t *CaveTalk_SpeakGyroscope(CaveTalk_Handle_t *const handle, const cavetalk_Gyroscope *const gyroscope);
+CaveTalk_Message_t *CaveTalk_SpeakEncoders(CaveTalk_Handle_t *const handle, const cavetalk_Encoders *const encoders);
 
 #ifdef __cplusplus
 }

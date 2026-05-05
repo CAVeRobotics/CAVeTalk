@@ -3,6 +3,8 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <stdio.h>
+#include <string.h>
 
 #include "acceleration.pb.h"
 #include "arm.pb.h"
@@ -17,11 +19,21 @@
 #define CAVETALK_UNUSED(arg)      (void)(arg)
 #define CAVETALK_MAX_PAYLOAD_SIZE 255U
 
-static char CaveTalk_DecodeBuffer[CAVETALK_MAX_PAYLOAD_SIZE];
+static char              CaveTalk_DecodeBuffer[CAVETALK_MAX_PAYLOAD_SIZE];
+static const char *const kCaveTalk_KeyDelimiter                  = "/";
+static const char *const kCaveTalk_TopicKeys[cavetalk_Id_ID_MAX] = {
+    [cavetalk_Id_ID_NONE]         = "none",
+    [cavetalk_Id_ID_LOG]          = "log",
+    [cavetalk_Id_ID_ARM]          = "arm",
+    [cavetalk_Id_ID_DRIVE]        = "drive",
+    [cavetalk_Id_ID_ACCELERATION] = "acceleration",
+    [cavetalk_Id_ID_GYROSCOPE]    = "gyroscope",
+    [cavetalk_Id_ID_ENCODERS]     = "encoders",
+};
 
 static cavetalk_Id CaveTalk_GetId(const CaveTalk_Handle_t *const handle, const char *const key);
-static char *CaveTalk_GetKey(const CaveTalk_Handle_t *const handle, const cavetalk_Id id);
-static void CaveTalk_Speak(const CaveTalk_Handle_t *const handle, CaveTalk_Message_t *const message, const cavetalk_Id id, const size_t size);
+static char *CaveTalk_BuildKey(const CaveTalk_Handle_t *const handle, const cavetalk_Id id);
+static CaveTalk_Message_t *CaveTalk_Speak(CaveTalk_Handle_t *handle, const cavetalk_Id id, const size_t data_size);
 static void CaveTalk_HandleLog(const CaveTalk_Handle_t *const handle, const CaveTalk_Message_t *const message);
 static void CaveTalk_HandleArm(const CaveTalk_Handle_t *const handle, const CaveTalk_Message_t *const message);
 static void CaveTalk_HandleDrive(const CaveTalk_Handle_t *const handle, const CaveTalk_Message_t *const message);
@@ -38,7 +50,7 @@ bool CaveTalk_Initialize(CaveTalk_Handle_t *const handle, const CaveTalk_Callbac
     if ((NULL != handle) && (NULL != callbacks) && (NULL != buffer) && (0U != buffer_size))
     {
         handle->callbacks   = *callbacks;
-        handle->callbacks   = *callbacks;
+        handle->message     = kCaveTalk_MessageNull;
         handle->id          = id;
         handle->buffer      = buffer;
         handle->buffer_size = buffer_size;
@@ -49,21 +61,26 @@ bool CaveTalk_Initialize(CaveTalk_Handle_t *const handle, const CaveTalk_Callbac
     return initialized;
 }
 
-bool CaveTalk_IsMessageValid(const CaveTalk_Message_t *const message)
+char *CaveTalk_GetKey(CaveTalk_Handle_t *const handle, const CaveTalk_Id_t peer_id, const cavetalk_Id key_id)
 {
-    bool valid = false;
+    char *key = NULL;
 
-    if ((NULL != message) && (NULL != message->key) && (NULL != message->data) && (0U != message->size))
+    if (NULL != handle)
     {
-        valid = true;
+        const CaveTalk_Id_t id = handle->id;
+        handle->id      = peer_id;
+        handle->message = kCaveTalk_MessageNull;
+
+        key        = CaveTalk_BuildKey(handle, key_id);
+        handle->id = id;
     }
 
-    return valid;
+    return key;
 }
 
 void CaveTalk_Hear(const CaveTalk_Handle_t *const handle, const CaveTalk_Message_t message)
 {
-    if ((NULL != handle) && CaveTalk_IsMessageValid(&message))
+    if ((NULL != handle) && (NULL != message.key) && (NULL != message.data) && (0U != message.size))
     {
         switch (CaveTalk_GetId(handle, message.key))
         {
@@ -92,9 +109,9 @@ void CaveTalk_Hear(const CaveTalk_Handle_t *const handle, const CaveTalk_Message
     }
 }
 
-CaveTalk_Message_t CaveTalk_SpeakLog(const CaveTalk_Handle_t *const handle, char *const log)
+CaveTalk_Message_t *CaveTalk_SpeakLog(CaveTalk_Handle_t *const handle, char *const log)
 {
-    CaveTalk_Message_t message = kCaveTalk_MessageNull;
+    CaveTalk_Message_t *message = NULL;
 
     if ((NULL != handle) && (NULL != log))
     {
@@ -106,16 +123,16 @@ CaveTalk_Message_t CaveTalk_SpeakLog(const CaveTalk_Handle_t *const handle, char
 
         if (pb_encode(&ostream, cavetalk_Log_fields, &log_message))
         {
-            CaveTalk_Speak(handle, &message, cavetalk_Id_ID_LOG, ostream.bytes_written);
+            message = CaveTalk_Speak(handle, cavetalk_Id_ID_LOG, ostream.bytes_written);
         }
     }
 
     return message;
 }
 
-CaveTalk_Message_t CaveTalk_SpeakArm(const CaveTalk_Handle_t *const handle, const cavetalk_Mode mode)
+CaveTalk_Message_t *CaveTalk_SpeakArm(CaveTalk_Handle_t *const handle, const cavetalk_Mode mode)
 {
-    CaveTalk_Message_t message = kCaveTalk_MessageNull;
+    CaveTalk_Message_t *message = NULL;
 
     if (NULL != handle)
     {
@@ -127,16 +144,16 @@ CaveTalk_Message_t CaveTalk_SpeakArm(const CaveTalk_Handle_t *const handle, cons
 
         if (pb_encode(&ostream, cavetalk_Arm_fields, &arm_message))
         {
-            CaveTalk_Speak(handle, &message, cavetalk_Id_ID_ARM, ostream.bytes_written);
+            message = CaveTalk_Speak(handle, cavetalk_Id_ID_ARM, ostream.bytes_written);
         }
     }
 
     return message;
 }
 
-CaveTalk_Message_t CaveTalk_SpeakDrive(const CaveTalk_Handle_t *const handle, const cavetalk_Drive *const drive)
+CaveTalk_Message_t *CaveTalk_SpeakDrive(CaveTalk_Handle_t *const handle, const cavetalk_Drive *const drive)
 {
-    CaveTalk_Message_t message = kCaveTalk_MessageNull;
+    CaveTalk_Message_t *message = NULL;
 
     if ((NULL != handle) && (NULL != drive))
     {
@@ -144,16 +161,16 @@ CaveTalk_Message_t CaveTalk_SpeakDrive(const CaveTalk_Handle_t *const handle, co
 
         if (pb_encode(&ostream, cavetalk_Drive_fields, drive))
         {
-            CaveTalk_Speak(handle, &message, cavetalk_Id_ID_DRIVE, ostream.bytes_written);
+            message = CaveTalk_Speak(handle, cavetalk_Id_ID_DRIVE, ostream.bytes_written);
         }
     }
 
     return message;
 }
 
-CaveTalk_Message_t CaveTalk_SpeakAcceleration(const CaveTalk_Handle_t *const handle, const cavetalk_Acceleration *const acceleration)
+CaveTalk_Message_t *CaveTalk_SpeakAcceleration(CaveTalk_Handle_t *const handle, const cavetalk_Acceleration *const acceleration)
 {
-    CaveTalk_Message_t message = kCaveTalk_MessageNull;
+    CaveTalk_Message_t *message = NULL;
 
     if ((NULL != handle) && (NULL != acceleration))
     {
@@ -161,16 +178,16 @@ CaveTalk_Message_t CaveTalk_SpeakAcceleration(const CaveTalk_Handle_t *const han
 
         if (pb_encode(&ostream, cavetalk_Acceleration_fields, acceleration))
         {
-            CaveTalk_Speak(handle, &message, cavetalk_Id_ID_ACCELERATION, ostream.bytes_written);
+            message = CaveTalk_Speak(handle, cavetalk_Id_ID_ACCELERATION, ostream.bytes_written);
         }
     }
 
     return message;
 }
 
-CaveTalk_Message_t CaveTalk_SpeakGyroscope(const CaveTalk_Handle_t *const handle, const cavetalk_Gyroscope *const gyroscope)
+CaveTalk_Message_t *CaveTalk_SpeakGyroscope(CaveTalk_Handle_t *const handle, const cavetalk_Gyroscope *const gyroscope)
 {
-    CaveTalk_Message_t message = kCaveTalk_MessageNull;
+    CaveTalk_Message_t *message = NULL;
 
     if ((NULL != handle) && (NULL != gyroscope))
     {
@@ -178,16 +195,16 @@ CaveTalk_Message_t CaveTalk_SpeakGyroscope(const CaveTalk_Handle_t *const handle
 
         if (pb_encode(&ostream, cavetalk_Gyroscope_fields, gyroscope))
         {
-            CaveTalk_Speak(handle, &message, cavetalk_Id_ID_GYROSCOPE, ostream.bytes_written);
+            message = CaveTalk_Speak(handle, cavetalk_Id_ID_GYROSCOPE, ostream.bytes_written);
         }
     }
 
     return message;
 }
 
-CaveTalk_Message_t CaveTalk_SpeakEncoders(const CaveTalk_Handle_t *const handle, const cavetalk_Encoders *const encoders)
+CaveTalk_Message_t *CaveTalk_SpeakEncoders(CaveTalk_Handle_t *const handle, const cavetalk_Encoders *const encoders)
 {
-    CaveTalk_Message_t message = kCaveTalk_MessageNull;
+    CaveTalk_Message_t *message = NULL;
 
     if ((NULL != handle) && (NULL != encoders))
     {
@@ -197,7 +214,7 @@ CaveTalk_Message_t CaveTalk_SpeakEncoders(const CaveTalk_Handle_t *const handle,
 
         if (pb_encode(&ostream, cavetalk_Encoders_fields, encoders))
         {
-            CaveTalk_Speak(handle, &message, cavetalk_Id_ID_ENCODERS, ostream.bytes_written);
+            message = CaveTalk_Speak(handle, cavetalk_Id_ID_ENCODERS, ostream.bytes_written);
         }
     }
 
@@ -206,31 +223,77 @@ CaveTalk_Message_t CaveTalk_SpeakEncoders(const CaveTalk_Handle_t *const handle,
 
 static cavetalk_Id CaveTalk_GetId(const CaveTalk_Handle_t *const handle, const char *const key)
 {
-    CAVETALK_UNUSED(handle);
-    CAVETALK_UNUSED(key);
+    cavetalk_Id  id     = cavetalk_Id_ID_NONE;
+    const size_t length = (size_t)strnlen(key, handle->buffer_size);
 
-    cavetalk_Id id = cavetalk_Id_ID_NONE;
+    if (length < handle->buffer_size)
+    {
+        const char *topic = memchr(key, *kCaveTalk_KeyDelimiter, length);
 
-    /* TODO */
+        if (NULL != topic)
+        {
+            ++topic;
+            const size_t topic_length = length - (size_t)(topic - key);
+
+            if (topic_length > 0U)
+            {
+                for (size_t i = 0U; i < (sizeof(kCaveTalk_TopicKeys) / sizeof(kCaveTalk_TopicKeys[0])); i++)
+                {
+                    if (0 == strncmp(kCaveTalk_TopicKeys[i], topic, topic_length))
+                    {
+                        id = (cavetalk_Id)i;
+                        break;
+                    }
+                }
+            }
+        }
+    }
 
     return id;
 }
 
-static char *CaveTalk_GetKey(const CaveTalk_Handle_t *const handle, const cavetalk_Id id)
+static char *CaveTalk_BuildKey(const CaveTalk_Handle_t *const handle, const cavetalk_Id id)
 {
-    CAVETALK_UNUSED(handle);
-    CAVETALK_UNUSED(id);
+    char *       key      = NULL;
+    const size_t max_size = handle->buffer_size - handle->message.size;
 
-    /* TODO */
+    if ((max_size > 0U) && (cavetalk_Id_ID_NONE != id))
+    {
+        char *const string_buffer = (char *)(handle->buffer + handle->message.size);
+        const int   size          = snprintf(string_buffer, max_size, "%lu%s", (unsigned long)handle->id, kCaveTalk_KeyDelimiter);
 
-    return NULL;
+        if ((size > 0) && ((size_t)size < max_size))
+        {
+            const size_t size_remaining = max_size - (size_t)size;
+
+            if (strnlen(kCaveTalk_TopicKeys[id], size_remaining) < size_remaining)
+            {
+                (void)strncat(string_buffer, kCaveTalk_TopicKeys[id], size_remaining);
+                key = string_buffer;
+            }
+        }
+    }
+
+    return key;
 }
 
-static void CaveTalk_Speak(const CaveTalk_Handle_t *const handle, CaveTalk_Message_t *const message, const cavetalk_Id id, const size_t size)
+static CaveTalk_Message_t *CaveTalk_Speak(CaveTalk_Handle_t *const handle, const cavetalk_Id id, const size_t data_size)
 {
-    message->key  = CaveTalk_GetKey(handle, id);
-    message->data = handle->buffer;
-    message->size = size;
+    CaveTalk_Message_t *message = NULL;
+    handle->message.key = CaveTalk_BuildKey(handle, id);
+
+    if (NULL != handle->message.key)
+    {
+        handle->message.data = handle->buffer;
+        handle->message.size = data_size;
+        message              = &handle->message;
+    }
+    else
+    {
+        handle->message = kCaveTalk_MessageNull;
+    }
+
+    return message;
 }
 
 static void CaveTalk_HandleLog(const CaveTalk_Handle_t *const handle, const CaveTalk_Message_t *const message)
