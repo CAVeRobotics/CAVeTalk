@@ -30,7 +30,7 @@ typedef struct
     void (*hear_drive)(const cavetalk_Drive *const drive);
     void (*hear_acceleration)(const cavetalk_Acceleration *const acceleration);
     void (*hear_gyroscope)(const cavetalk_Gyroscope *const gyroscope);
-    void (*hear_encoders)(const cavetalk_Encoders *const encoders);
+    void (*hear_encoders)(const cavetalk_Encoder *const encoders, const size_t count);
 } CaveTalk_Callbacks_t;
 
 typedef struct
@@ -59,7 +59,7 @@ CaveTalk_Message_t *CaveTalk_SpeakArm(CaveTalk_Handle_t *const handle, const cav
 CaveTalk_Message_t *CaveTalk_SpeakDrive(CaveTalk_Handle_t *const handle, const cavetalk_Drive *const drive);
 CaveTalk_Message_t *CaveTalk_SpeakAcceleration(CaveTalk_Handle_t *const handle, const cavetalk_Acceleration *const acceleration);
 CaveTalk_Message_t *CaveTalk_SpeakGyroscope(CaveTalk_Handle_t *const handle, const cavetalk_Gyroscope *const gyroscope);
-CaveTalk_Message_t *CaveTalk_SpeakEncoders(CaveTalk_Handle_t *const handle, const cavetalk_Encoders *const encoders);
+CaveTalk_Message_t *CaveTalk_SpeakEncoders(CaveTalk_Handle_t *const handle, cavetalk_Encoder *const encoders, const size_t count);
 
 #ifdef __cplusplus
 }

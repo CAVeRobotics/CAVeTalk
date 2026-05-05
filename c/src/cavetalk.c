@@ -17,7 +17,13 @@
 #include "pb_encode.h"
 
 #define CAVETALK_UNUSED(arg)      (void)(arg)
-#define CAVETALK_MAX_PAYLOAD_SIZE 255U
+#define CAVETALK_MAX_PAYLOAD_SIZE 256U
+
+typedef struct
+{
+    cavetalk_Encoder *encoders;
+    size_t count;
+} CaveTalk_EncoderList_t;
 
 const CaveTalk_Message_t   kCaveTalk_MessageNull = {
     .key  = NULL,
@@ -63,6 +69,8 @@ static void CaveTalk_HandleGyroscope(const CaveTalk_Handle_t *const handle, cons
 static void CaveTalk_HandleEncoders(const CaveTalk_Handle_t *const handle, const CaveTalk_Message_t *const message);
 static bool CaveTalk_EncodeString(pb_ostream_t *stream, const pb_field_t *field, void *const *arg);
 static bool CaveTalk_DecodeString(pb_istream_t *stream, const pb_field_t *field, void **arg);
+static bool CaveTalk_EncodeRepeatedSubmessage(pb_ostream_t *stream, const pb_field_t *field, void *const *arg);
+static bool CaveTalk_DecodeRepeatedSubmessage(pb_istream_t *stream, const pb_field_t *field, void **arg);
 
 bool CaveTalk_Initialize(CaveTalk_Handle_t *const handle, const CaveTalk_Callbacks_t *const callbacks, const CaveTalk_Id_t id, uint8_t *const buffer, const size_t buffer_size)
 {
@@ -136,9 +144,9 @@ CaveTalk_Message_t *CaveTalk_SpeakLog(CaveTalk_Handle_t *const handle, char *con
 
     if ((NULL != handle) && (NULL != log))
     {
-        pb_ostream_t ostream = pb_ostream_from_buffer(handle->buffer, handle->buffer_size);
-
+        pb_ostream_t ostream     = pb_ostream_from_buffer(handle->buffer, handle->buffer_size);
         cavetalk_Log log_message = cavetalk_Log_init_zero;
+
         log_message.log_string.arg          = log;
         log_message.log_string.funcs.encode = CaveTalk_EncodeString;
 
@@ -157,8 +165,7 @@ CaveTalk_Message_t *CaveTalk_SpeakArm(CaveTalk_Handle_t *const handle, const cav
 
     if (NULL != handle)
     {
-        pb_ostream_t ostream = pb_ostream_from_buffer(handle->buffer, handle->buffer_size);
-
+        pb_ostream_t ostream     = pb_ostream_from_buffer(handle->buffer, handle->buffer_size);
         cavetalk_Arm arm_message = cavetalk_Arm_init_zero;
 
         arm_message.mode = mode;
@@ -223,17 +230,23 @@ CaveTalk_Message_t *CaveTalk_SpeakGyroscope(CaveTalk_Handle_t *const handle, con
     return message;
 }
 
-CaveTalk_Message_t *CaveTalk_SpeakEncoders(CaveTalk_Handle_t *const handle, const cavetalk_Encoders *const encoders)
+CaveTalk_Message_t *CaveTalk_SpeakEncoders(CaveTalk_Handle_t *const handle, cavetalk_Encoder *const encoders, const size_t count)
 {
     CaveTalk_Message_t *message = NULL;
 
-    if ((NULL != handle) && (NULL != encoders))
+    if ((NULL != handle) && (NULL != encoders) && (count > 0U))
     {
-        pb_ostream_t ostream = pb_ostream_from_buffer(handle->buffer, handle->buffer_size);
+        pb_ostream_t           ostream          = pb_ostream_from_buffer(handle->buffer, handle->buffer_size);
+        cavetalk_Encoders      encoders_message = cavetalk_Encoders_init_zero;
+        CaveTalk_EncoderList_t encoder_list     = {
+            .encoders = encoders,
+            .count    = count,
+        };
 
-        /* TODO encoder multiple fields */
+        encoders_message.encoders.arg          = &encoder_list;
+        encoders_message.encoders.funcs.encode = CaveTalk_EncodeRepeatedSubmessage;
 
-        if (pb_encode(&ostream, cavetalk_Encoders_fields, encoders))
+        if (pb_encode(&ostream, cavetalk_Encoders_fields, &encoders_message))
         {
             message = CaveTalk_Speak(handle, cavetalk_Id_ID_ENCODERS, ostream.bytes_written);
         }
@@ -304,7 +317,7 @@ static CaveTalk_Message_t *CaveTalk_Speak(CaveTalk_Handle_t *const handle, const
 
     handle->message.data = handle->buffer;
     handle->message.size = data_size;
-    handle->message.key = CaveTalk_BuildKey(handle, id);
+    handle->message.key  = CaveTalk_BuildKey(handle, id);
 
     if (NULL != handle->message.key)
     {
@@ -377,16 +390,23 @@ static void CaveTalk_HandleGyroscope(const CaveTalk_Handle_t *const handle, cons
 
 static void CaveTalk_HandleEncoders(const CaveTalk_Handle_t *const handle, const CaveTalk_Message_t *const message)
 {
-    CAVETALK_UNUSED(handle);
-    CAVETALK_UNUSED(message);
+    pb_istream_t      istream          = pb_istream_from_buffer(message->data, message->size);
+    cavetalk_Encoders encoders_message = cavetalk_Encoders_init_zero;
+    size_t            count            = 0U;
 
-    /* TODO repeated fields */
+    encoders_message.encoders.arg          = &count;
+    encoders_message.encoders.funcs.decode = CaveTalk_DecodeRepeatedSubmessage;
+
+    if ((NULL != handle->callbacks.hear_encoders) && pb_decode(&istream, cavetalk_Encoders_fields, &encoders_message))
+    {
+        handle->callbacks.hear_encoders((const cavetalk_Encoder *const)CaveTalk_DecodeBuffer, count);
+    }
 }
 
 static bool CaveTalk_EncodeString(pb_ostream_t *stream, const pb_field_t *field, void *const *arg)
 {
-    bool        encoded = false;
-    const char *string  = (const char *)(*arg);
+    bool              encoded = false;
+    const char *const string  = (const char *const)(*arg);
 
     if (pb_encode_tag_for_field(stream, field))
     {
@@ -404,14 +424,54 @@ static bool CaveTalk_DecodeString(pb_istream_t *stream, const pb_field_t *field,
 
     if (NULL != arg)
     {
-        /* TODO use handle buffer? */
-
+        const size_t bytes_read = stream->bytes_left;
         *arg = NULL;
 
-        if ((stream->bytes_left <= (sizeof(CaveTalk_DecodeBuffer) - 1)) && (pb_read(stream, (unsigned char *)CaveTalk_DecodeBuffer, stream->bytes_left)))
+        if ((stream->bytes_left <= (sizeof(CaveTalk_DecodeBuffer) - 1U)) && (pb_read(stream, (unsigned char *)CaveTalk_DecodeBuffer, stream->bytes_left)))
         {
-            *arg    = (void *)CaveTalk_DecodeBuffer;
+            CaveTalk_DecodeBuffer[bytes_read] = '\0';
+            *arg                              = (void *)CaveTalk_DecodeBuffer;
+            decoded                           = true;
+        }
+    }
+
+    return decoded;
+}
+
+static bool CaveTalk_EncodeRepeatedSubmessage(pb_ostream_t *stream, const pb_field_t *field, void *const *arg)
+{
+    bool                                encoded      = true;
+    const CaveTalk_EncoderList_t *const encoder_list = (const CaveTalk_EncoderList_t *const)*arg;
+
+    for (size_t i = 0U; i < encoder_list->count; i++)
+    {
+        if (!pb_encode_tag_for_field(stream, field) || !pb_encode_submessage(stream, cavetalk_Encoder_fields, &encoder_list->encoders[i]))
+        {
+            encoded = false;
+            break;
+        }
+    }
+
+    return encoded;
+}
+
+static bool CaveTalk_DecodeRepeatedSubmessage(pb_istream_t *stream, const pb_field_t *field, void **arg)
+{
+    CAVETALK_UNUSED(field);
+
+    bool          decoded = false;
+    size_t *const count   = (size_t *)*arg;
+    const size_t  offset  = *count * sizeof(cavetalk_Encoder);
+
+    if ((sizeof(CaveTalk_DecodeBuffer) - offset) >= sizeof(cavetalk_Encoder))
+    {
+        cavetalk_Encoder *const encoder = (cavetalk_Encoder *)CaveTalk_DecodeBuffer + offset;
+        *encoder = (cavetalk_Encoder)cavetalk_Encoder_init_zero;
+
+        if (pb_decode(stream, cavetalk_Encoder_fields, encoder))
+        {
             decoded = true;
+            ++*count;
         }
     }
 
