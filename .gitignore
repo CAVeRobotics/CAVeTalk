@@ -12,4 +12,5 @@ tools/nanopb/env
 _*
 
 # VS Code
-.vscode
+.vscode/*
+!.vscode/launch.json

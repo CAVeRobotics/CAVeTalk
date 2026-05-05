@@ -42,28 +42,9 @@ typedef struct
     size_t buffer_size;
 } CaveTalk_Handle_t;
 
-static const CaveTalk_Message_t kCaveTalk_MessageNull = {
-    .key  = NULL,
-    .data = NULL,
-    .size = 0U,
-};
-
-static const CaveTalk_Callbacks_t kCaveTalk_CallbacksNull = {
-    .hear_log          = NULL,
-    .hear_arm          = NULL,
-    .hear_drive        = NULL,
-    .hear_acceleration = NULL,
-    .hear_gyroscope    = NULL,
-    .hear_encoders     = NULL,
-};
-
-static const CaveTalk_Handle_t kCaveTalk_HandleNull = {
-    .callbacks   = kCaveTalk_CallbacksNull,
-    .message     = kCaveTalk_MessageNull,
-    .id          = 0U,
-    .buffer      = NULL,
-    .buffer_size = 0U,
-};
+extern const CaveTalk_Message_t   kCaveTalk_MessageNull;
+extern const CaveTalk_Callbacks_t kCaveTalk_CallbacksNull;
+extern const CaveTalk_Handle_t    kCaveTalk_HandleNull;
 
 #ifdef __cplusplus
 extern "C"

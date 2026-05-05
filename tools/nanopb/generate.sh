@@ -2,7 +2,7 @@
 
 SCRIPT_DIR=$(dirname "$0")
 ENV_DIR=$SCRIPT_DIR/env
-OUT_DIR=$SCRIPT_DIR/../../build/cavetalk-c_protos
+OUT_DIR=$SCRIPT_DIR/../../build/cavetalkc_protos
 MSG_DIR=$SCRIPT_DIR/../../messages
 NANOPB_DIR=$SCRIPT_DIR/nanopb
 

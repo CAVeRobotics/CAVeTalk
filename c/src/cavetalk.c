@@ -19,6 +19,27 @@
 #define CAVETALK_UNUSED(arg)      (void)(arg)
 #define CAVETALK_MAX_PAYLOAD_SIZE 255U
 
+const CaveTalk_Message_t   kCaveTalk_MessageNull = {
+    .key  = NULL,
+    .data = NULL,
+    .size = 0U,
+};
+const CaveTalk_Callbacks_t kCaveTalk_CallbacksNull = {
+    .hear_log          = NULL,
+    .hear_arm          = NULL,
+    .hear_drive        = NULL,
+    .hear_acceleration = NULL,
+    .hear_gyroscope    = NULL,
+    .hear_encoders     = NULL,
+};
+const CaveTalk_Handle_t    kCaveTalk_HandleNull = {
+    .callbacks   = kCaveTalk_CallbacksNull,
+    .message     = kCaveTalk_MessageNull,
+    .id          = 0U,
+    .buffer      = NULL,
+    .buffer_size = 0U,
+};
+
 static char              CaveTalk_DecodeBuffer[CAVETALK_MAX_PAYLOAD_SIZE];
 static const char *const kCaveTalk_KeyDelimiter                  = "/";
 static const char *const kCaveTalk_TopicKeys[cavetalk_Id_ID_MAX] = {
@@ -280,13 +301,14 @@ static char *CaveTalk_BuildKey(const CaveTalk_Handle_t *const handle, const cave
 static CaveTalk_Message_t *CaveTalk_Speak(CaveTalk_Handle_t *const handle, const cavetalk_Id id, const size_t data_size)
 {
     CaveTalk_Message_t *message = NULL;
+
+    handle->message.data = handle->buffer;
+    handle->message.size = data_size;
     handle->message.key = CaveTalk_BuildKey(handle, id);
 
     if (NULL != handle->message.key)
     {
-        handle->message.data = handle->buffer;
-        handle->message.size = data_size;
-        message              = &handle->message;
+        message = &handle->message;
     }
     else
     {
