@@ -4,7 +4,7 @@ CAVEMAN controller message protocol
 
 ## Protocol
 
-The CAVeTalk protocol is specifically designed to work with pub/sub frameworks, though it does not have to be used exclusively with pub/sub frameworks. Each key string is generated alongside each message that can be used as a topic in pub/sub frameworks.
+The CAVeTalk protocol is specifically designed to work with pub/sub frameworks, though it does not have to be used exclusively with pub/sub frameworks. A key string is generated alongside each message that can be used as a topic in pub/sub frameworks.
 
 ## Protobufs
 

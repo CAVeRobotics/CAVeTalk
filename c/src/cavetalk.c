@@ -465,7 +465,7 @@ static bool CaveTalk_DecodeRepeatedSubmessage(pb_istream_t *stream, const pb_fie
 
     if ((sizeof(CaveTalk_DecodeBuffer) - offset) >= sizeof(cavetalk_Encoder))
     {
-        cavetalk_Encoder *const encoder = (cavetalk_Encoder *)CaveTalk_DecodeBuffer + offset;
+        cavetalk_Encoder *const encoder = (cavetalk_Encoder *)(CaveTalk_DecodeBuffer + offset);
         *encoder = (cavetalk_Encoder)cavetalk_Encoder_init_zero;
 
         if (pb_decode(stream, cavetalk_Encoder_fields, encoder))
