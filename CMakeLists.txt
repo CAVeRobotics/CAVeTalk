@@ -104,7 +104,7 @@ target_compile_options(${CAVETALK_TARGET_CPP}_messages PRIVATE -Wno-missing-requ
 # C++ library
 ################################################################################
 set(CPP_DIR ${CMAKE_CURRENT_SOURCE_DIR}/c++)
-set(CPP_INC_DIR ${CPP_DIR}/inc)
+set(CPP_INC_DIR ${CPP_DIR}/include)
 set(CPP_SRC_DIR ${CPP_DIR}/src)
 set(CPP_SRCS ${CPP_SRC_DIR}/cavetalk.cc)
 add_library(${CAVETALK_TARGET_CPP})

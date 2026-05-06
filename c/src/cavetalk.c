@@ -147,8 +147,8 @@ CaveTalk_Message_t *CaveTalk_SpeakLog(CaveTalk_Handle_t *const handle, char *con
         pb_ostream_t ostream     = pb_ostream_from_buffer(handle->buffer, handle->buffer_size);
         cavetalk_Log log_message = cavetalk_Log_init_zero;
 
-        log_message.log_string.arg          = log;
-        log_message.log_string.funcs.encode = CaveTalk_EncodeString;
+        log_message.log.arg          = log;
+        log_message.log.funcs.encode = CaveTalk_EncodeString;
 
         if (pb_encode(&ostream, cavetalk_Log_fields, &log_message))
         {
@@ -336,11 +336,11 @@ static void CaveTalk_HandleLog(const CaveTalk_Handle_t *const handle, const Cave
     pb_istream_t istream     = pb_istream_from_buffer(message->data, message->size);
     cavetalk_Log log_message = cavetalk_Log_init_zero;
 
-    log_message.log_string.funcs.decode = CaveTalk_DecodeString;
+    log_message.log.funcs.decode = CaveTalk_DecodeString;
 
-    if ((NULL != handle->callbacks.hear_log) && pb_decode(&istream, cavetalk_Log_fields, &log_message) && (NULL != log_message.log_string.arg))
+    if ((NULL != handle->callbacks.hear_log) && pb_decode(&istream, cavetalk_Log_fields, &log_message) && (NULL != log_message.log.arg))
     {
-        handle->callbacks.hear_log((const char *const)log_message.log_string.arg);
+        handle->callbacks.hear_log((const char *const)log_message.log.arg);
     }
 }
 

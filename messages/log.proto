@@ -3,5 +3,5 @@ syntax = "proto3";
 package cavetalk;
 
 message Log {
-    string log_string = 1;
+    string log = 1;
 }

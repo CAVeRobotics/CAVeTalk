@@ -14,7 +14,6 @@
 #include "log.pb.h"
 
 typedef uint32_t CaveTalk_Id_t;
-typedef uint8_t  CaveTalk_Length_t;
 
 typedef struct
 {
