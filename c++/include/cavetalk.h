@@ -41,7 +41,7 @@ class CaveTalker
         CaveTalker(CaveTalker &&cavetalker)                 = delete;
         CaveTalker &operator=(const CaveTalker &cavetalker) = delete;
         CaveTalker &operator=(CaveTalker &&cavetalker)      = delete;
-        void Hear(const std::string &key, const std::vector<std::uint8_t> &data) const;
+        void Hear(const Message_t &message) const;
         Message_t SpeakLog(const std::string &log) const;
         Message_t SpeakArm(const Mode mode) const;
         Message_t SpeakDrive(const Drive &drive) const;

@@ -29,7 +29,7 @@ public:
     MOCK_METHOD(void, HearEncoders, (const cavetalk_Encoder *const encoders, const std::size_t count), (const, override));
 };
 
-class CaveTalk : public testing::Test
+class CaveTalkC : public testing::Test
 {
 protected:
     static void HearLog(const char *const log)
@@ -89,9 +89,9 @@ protected:
     std::uint8_t listener_buffer_[CAVETALK_TEST_BUFFER_SIZE];
 };
 
-MockCallbacks *CaveTalk::mock_callbacks_ = nullptr;
+MockCallbacks *CaveTalkC::mock_callbacks_ = nullptr;
 
-TEST_F(CaveTalk, GetKey)
+TEST_F(CaveTalkC, GetKey)
 {
     ASSERT_STREQ("1234/drive", CaveTalk_GetKey(&speaker_handle_, 1234U, cavetalk_Id_ID_DRIVE));
     ASSERT_STREQ("123456/acceleration", CaveTalk_GetKey(&speaker_handle_, 123456U, cavetalk_Id_ID_ACCELERATION));
@@ -99,7 +99,7 @@ TEST_F(CaveTalk, GetKey)
     ASSERT_STREQ("123456/arm", CaveTalk_GetKey(&speaker_handle_, 123456U, cavetalk_Id_ID_ARM));
 }
 
-TEST_F(CaveTalk, SpeakAndHearLog)
+TEST_F(CaveTalkC, SpeakAndHearLog)
 {
     char log_0[] = "foobar";
     char log_1[] = "baz";
@@ -115,17 +115,17 @@ TEST_F(CaveTalk, SpeakAndHearLog)
     CaveTalk_Hear(&listener_handle_, *message);
 }
 
-TEST_F(CaveTalk, SpeakAndHearEncoders)
+TEST_F(CaveTalkC, SpeakAndHearEncoders)
 {
     cavetalk_Encoder encoders_0[] = {
-        {.pulses = 100U, .rate_radians_per_second = 1.5f},
-        {.pulses = 250U, .rate_radians_per_second = -2.6f},
-        {.pulses = -370U, .rate_radians_per_second = 1.7f},
+        {.pulses = 100, .rate_radians_per_second = 1.5f},
+        {.pulses = 250, .rate_radians_per_second = -2.6f},
+        {.pulses = -370, .rate_radians_per_second = 1.7f},
     };
     size_t encoders_0_count = sizeof(encoders_0) / sizeof(encoders_0[0U]);
     cavetalk_Encoder encoders_1[] = {
-        {.pulses = -130U, .rate_radians_per_second = 1.4f},
-        {.pulses = 260U, .rate_radians_per_second = -2.7f},
+        {.pulses = -130, .rate_radians_per_second = 1.4f},
+        {.pulses = 260, .rate_radians_per_second = -2.7f},
     };
     size_t encoders_1_count = sizeof(encoders_1) / sizeof(encoders_1[0U]);
 

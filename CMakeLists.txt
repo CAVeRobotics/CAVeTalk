@@ -108,6 +108,7 @@ set(CPP_INC_DIR ${CPP_DIR}/include)
 set(CPP_SRC_DIR ${CPP_DIR}/src)
 set(CPP_SRCS ${CPP_SRC_DIR}/cavetalk.cc)
 add_library(${CAVETALK_TARGET_CPP})
+add_library(${CAVETALK_TARGET}::${CAVETALK_TARGET_CPP} ALIAS ${CAVETALK_TARGET_CPP})
 target_sources(${CAVETALK_TARGET_CPP}
     PRIVATE
         ${CPP_SRCS}
@@ -161,7 +162,16 @@ find_program(GCOVR_PATH gcovr
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     if(GCOVR_PATH)
         message(STATUS "Found Gcovr at: ${GCOVR_PATH}")
-        set(GCOVR_ARGS -r ${CMAKE_BINARY_DIR} -f ${LIB_DIR} --exclude-throw-branches)
+        string(REPLACE "+" "\\\\\\+" GCOVR_C_DIR "${C_DIR}")
+        string(REPLACE "+" "\\\\\\+" GCOVR_CPP_DIR "${CPP_DIR}")
+        set(GCOVR_ARGS
+            -r ${CMAKE_CURRENT_SOURCE_DIR}
+            -f ${GCOVR_C_DIR}
+            -f ${GCOVR_CPP_DIR}
+            --exclude-throw-branches
+            --gcov-ignore-parse-errors=suspicious_hits.warn
+            --gcov-ignore-parse-errors=negative_hits.warn
+        )
         if(DEFINED ENV{GCOV_EXECUTABLE})
             set(GCOVR_ARGS --gcov-executable $ENV{GCOV_EXECUTABLE} ${GCOVR_ARGS})
         endif()

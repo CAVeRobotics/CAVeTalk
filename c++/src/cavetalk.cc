@@ -1,9 +1,10 @@
 #include "cavetalk.h"
 
+#include <array>
 #include <cstddef>
 #include <memory>
 #include <string>
-#include <unordered_map>
+#include <string_view>
 #include <vector>
 
 #include "acceleration.pb.h"
@@ -19,16 +20,23 @@
 namespace cavetalk
 {
 
-static const std::string                         kDelimiter = "/";
-static const std::unordered_map<std::string, Id> kTopicKeys = {
-    {"none", ID_NONE},
-    {"log", ID_LOG},
-    {"arm", ID_ARM},
-    {"drive", ID_DRIVE},
-    {"acceleration", ID_ACCELERATION},
-    {"gyroscope", ID_GYROSCOPE},
-    {"encoders", ID_ENCODERS},
-};
+static const std::string kDelimiter = "/";
+// *INDENT-OFF*
+    constexpr std::array<std::string_view, ID_MAX> kTopicKeys = []
+    {
+        std::array<std::string_view, ID_MAX> topic_keys{};
+
+        topic_keys[static_cast<int>(ID_NONE)] = "none";
+        topic_keys[static_cast<int>(ID_LOG)] = "log";
+        topic_keys[static_cast<int>(ID_ARM)] = "arm";
+        topic_keys[static_cast<int>(ID_DRIVE)] = "drive";
+        topic_keys[static_cast<int>(ID_ACCELERATION)] = "acceleration";
+        topic_keys[static_cast<int>(ID_GYROSCOPE)] = "gyroscope";
+        topic_keys[static_cast<int>(ID_ENCODERS)] = "encoders";
+
+        return topic_keys;
+    }();
+// *INDENT-ON*
 
 static Id GetId(const std::string &key);
 
@@ -68,27 +76,27 @@ CaveTalker::CaveTalker(const Id_t id, std::shared_ptr<Callbacks> callbacks) : id
 {
 }
 
-void CaveTalker::Hear(const std::string &key, const std::vector<std::uint8_t> &data) const
+void CaveTalker::Hear(const Message_t &message) const
 {
-    switch (GetId(key))
+    switch (GetId(message.first))
     {
     case ID_LOG:
-        HandleLog(data);
+        HandleLog(message.second);
         break;
     case ID_ARM:
-        HandleArm(data);
+        HandleArm(message.second);
         break;
     case ID_DRIVE:
-        HandleDrive(data);
+        HandleDrive(message.second);
         break;
     case ID_ACCELERATION:
-        HandleAcceleration(data);
+        HandleAcceleration(message.second);
         break;
     case ID_GYROSCOPE:
-        HandleGyroscope(data);
+        HandleGyroscope(message.second);
         break;
     case ID_ENCODERS:
-        HandleEncoders(data);
+        HandleEncoders(message.second);
         break;
     case ID_NONE:
     default:
@@ -224,7 +232,16 @@ void CaveTalker::HandleEncoders(const std::vector<std::uint8_t> &data) const
 
 std::string GetKey(const Id_t peer_id, const Id key_id)
 {
-    return std::to_string(peer_id) + kDelimiter + std::to_string(key_id);
+    std::string key;
+
+    if (key_id < ID_MAX)
+    {
+        key += std::to_string(peer_id);
+        key += kDelimiter;
+        key += kTopicKeys[key_id];
+    }
+
+    return key;
 }
 
 static Id GetId(const std::string &key)
@@ -235,11 +252,14 @@ static Id GetId(const std::string &key)
 
     if (std::string::npos != position)
     {
-        std::unordered_map<std::string, Id>::const_iterator i = kTopicKeys.find(key.substr(position + kDelimiter.length()));
+        const std::string topic = key.substr(position + kDelimiter.length());
 
-        if (kTopicKeys.end() != i)
+        for (std::size_t i = 0U; i < kTopicKeys.size(); i++)
         {
-            id = i->second;
+            if (kTopicKeys[i] == topic)
+            {
+                id = static_cast<Id>(i);
+            }
         }
     }
 

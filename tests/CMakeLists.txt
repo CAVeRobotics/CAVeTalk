@@ -8,7 +8,8 @@ if(IS_TOP_LEVEL)
 endif()
 
 set(CMAKE_CXX_STANDARD 20)
-set(CAVETALK_TEST_TARGET cavetalk-tests)
+set(CAVETALK_TEST_TARGET_C cavetalkc-tests)
+set(CAVETALK_TEST_TARGET_CPP cavetalkcpp-tests)
 
 ################################################################################
 # GoogleTest
@@ -28,35 +29,67 @@ include(GoogleTest)
 ################################################################################
 if(IS_TOP_LEVEL)
     find_package(cavetalkc REQUIRED)
+    find_package(cavetalkc++ REQUIRED)
 endif()
 
 ################################################################################
-# CAVeTalk tests
+# CAVeTalk C tests
 ################################################################################
-set(${CAVETALK_TEST_TARGET}_SRCS
+set(${CAVETALK_TEST_TARGET_C}_SRCS
     ${CMAKE_CURRENT_SOURCE_DIR}/src/cavetalkc_tests.cc
 )
-source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${${CAVETALK_TEST_TARGET}_SRCS})
-add_executable(${CAVETALK_TEST_TARGET})
-target_sources(${CAVETALK_TEST_TARGET}
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${${CAVETALK_TEST_TARGET_C}_SRCS})
+add_executable(${CAVETALK_TEST_TARGET_C})
+target_sources(${CAVETALK_TEST_TARGET_C}
     PRIVATE
-        ${${CAVETALK_TEST_TARGET}_SRCS}
+        ${${CAVETALK_TEST_TARGET_C}_SRCS}
 )
 if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
-    target_compile_options(${CAVETALK_TEST_TARGET}
+    target_compile_options(${CAVETALK_TEST_TARGET_C}
         PRIVATE
             -fdiagnostics-color=always
     )
-    target_link_options(${CAVETALK_TEST_TARGET}
+    target_link_options(${CAVETALK_TEST_TARGET_C}
         PRIVATE
             $<$<CONFIG:Debug>:--coverage>
     )
 # Add flags for other compilers here
 endif()
-target_link_libraries(${CAVETALK_TEST_TARGET}
+target_link_libraries(${CAVETALK_TEST_TARGET_C}
     PUBLIC
         cavetalk::cavetalkc
         GTest::gtest_main
         GTest::gmock
 )
-gtest_discover_tests(${CAVETALK_TEST_TARGET})
+gtest_discover_tests(${CAVETALK_TEST_TARGET_C})
+
+################################################################################
+# CAVeTalk C++ tests
+################################################################################
+set(${CAVETALK_TEST_TARGET_CPP}_SRCS
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/cavetalkcpp_tests.cc
+)
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${${CAVETALK_TEST_TARGET_CPP}_SRCS})
+add_executable(${CAVETALK_TEST_TARGET_CPP})
+target_sources(${CAVETALK_TEST_TARGET_CPP}
+    PRIVATE
+        ${${CAVETALK_TEST_TARGET_CPP}_SRCS}
+)
+if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+    target_compile_options(${CAVETALK_TEST_TARGET_CPP}
+        PRIVATE
+            -fdiagnostics-color=always
+    )
+    target_link_options(${CAVETALK_TEST_TARGET_CPP}
+        PRIVATE
+            $<$<CONFIG:Debug>:--coverage>
+    )
+# Add flags for other compilers here
+endif()
+target_link_libraries(${CAVETALK_TEST_TARGET_CPP}
+    PUBLIC
+        cavetalk::cavetalkc++
+        GTest::gtest_main
+        GTest::gmock
+)
+gtest_discover_tests(${CAVETALK_TEST_TARGET_CPP})
