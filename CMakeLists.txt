@@ -39,6 +39,13 @@ target_include_directories(${CAVETALK_TARGET_C}_messages
     PUBLIC
         ${C_MESSAGES_OUT_DIR}
 )
+if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+    target_compile_options(${CAVETALK_TARGET_C}_messages
+        PRIVATE
+            -fPIC
+    )
+# Add flags for other compilers here
+endif()
 
 ################################################################################
 # C library
