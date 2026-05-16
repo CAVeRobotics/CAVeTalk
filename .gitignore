@@ -1,6 +1,7 @@
 # Build
 _build
 build
+generated
 
 # CMake
 CMakeUserPresets.json

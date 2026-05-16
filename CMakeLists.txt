@@ -9,6 +9,7 @@ set(CAVETALK_TARGET cavetalk)
 set(CAVETALK_TARGET_C ${CAVETALK_TARGET}c)
 set(CAVETALK_TARGET_CPP ${CAVETALK_TARGET}c++)
 set(EXTERNAL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external)
+set(GENERATED_DIR ${CMAKE_CURRENT_SOURCE_DIR}/generated)
 
 option(CAVETALK_BUILD_C "Build CAVeTalk C library" ON)
 option(CAVETALK_BUILD_CPP "Build CAVeTalk C++ library" ON)
@@ -26,7 +27,7 @@ file(GLOB CAVETALK_MESSAGE_SRCS LIST_DIRECTORIES false CONFIGURE_DEPENDS
 # C messages
 ################################################################################
 if (CAVETALK_BUILD_C)
-    set(C_MESSAGES_OUT_DIR ${CMAKE_CURRENT_BINARY_DIR}/../${CAVETALK_TARGET_C}_protos)
+    set(C_MESSAGES_OUT_DIR ${GENERATED_DIR}/${CAVETALK_TARGET_C}_protos)
     file(GLOB CAVETALK_C_MESSAGE_SRCS LIST_DIRECTORIES false CONFIGURE_DEPENDS
         "${C_MESSAGES_OUT_DIR}/*.pb.c"
     )
@@ -97,7 +98,7 @@ if (CAVETALK_BUILD_CPP)
     add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/external/protobuf/third_party/abseil-cpp)
     find_package(utf8_range CONFIG REQUIRED HINTS ${PROTOBUF_INSTALL_DIR})
     find_package(Protobuf CONFIG REQUIRED HINTS ${PROTOBUF_INSTALL_DIR})
-    set(CPP_MESSAGES_OUT_DIR ${CMAKE_CURRENT_BINARY_DIR}/${CAVETALK_TARGET_CPP}_protos)
+    set(CPP_MESSAGES_OUT_DIR ${GENERATED_DIR}/${CAVETALK_TARGET_CPP}_protos)
     add_library(${CAVETALK_TARGET_CPP}_messages)
     protobuf_generate(
         TARGET ${CAVETALK_TARGET_CPP}_messages

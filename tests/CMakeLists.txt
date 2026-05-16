@@ -9,7 +9,7 @@ endif()
 
 set(CMAKE_CXX_STANDARD 20)
 set(CAVETALK_TEST_TARGET_C cavetalkc-tests)
-set(CAVETALK_TEST_TARGET_CPP cavetalkcpp-tests)
+set(CAVETALK_TEST_TARGET_CPP cavetalkc++-tests)
 
 ################################################################################
 # GoogleTest
