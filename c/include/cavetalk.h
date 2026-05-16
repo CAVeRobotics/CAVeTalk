@@ -13,6 +13,30 @@
 #include "ids.pb.h"
 #include "log.pb.h"
 
+#define CAVETALK_MESSAGE_NULL \
+        {                     \
+            .key  = NULL,     \
+            .data = NULL,     \
+            .size = 0U,       \
+        }
+#define CAVETALK_CALLBACKS_NULL        \
+        {                              \
+            .hear_log          = NULL, \
+            .hear_arm          = NULL, \
+            .hear_drive        = NULL, \
+            .hear_acceleration = NULL, \
+            .hear_gyroscope    = NULL, \
+            .hear_encoders     = NULL, \
+        }
+#define CAVETALK_HANDLE_NULL                        \
+        {                                           \
+            .callbacks   = CAVETALK_CALLBACKS_NULL, \
+            .message     = CAVETALK_MESSAGE_NULL,   \
+            .id          = 0U,                      \
+            .buffer      = NULL,                    \
+            .buffer_size = 0U,                      \
+        }
+
 typedef uint32_t CaveTalk_Id_t;
 
 typedef struct

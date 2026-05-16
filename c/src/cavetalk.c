@@ -25,26 +25,9 @@ typedef struct
     size_t count;
 } CaveTalk_EncoderList_t;
 
-const CaveTalk_Message_t   kCaveTalk_MessageNull = {
-    .key  = NULL,
-    .data = NULL,
-    .size = 0U,
-};
-const CaveTalk_Callbacks_t kCaveTalk_CallbacksNull = {
-    .hear_log          = NULL,
-    .hear_arm          = NULL,
-    .hear_drive        = NULL,
-    .hear_acceleration = NULL,
-    .hear_gyroscope    = NULL,
-    .hear_encoders     = NULL,
-};
-const CaveTalk_Handle_t    kCaveTalk_HandleNull = {
-    .callbacks   = kCaveTalk_CallbacksNull,
-    .message     = kCaveTalk_MessageNull,
-    .id          = 0U,
-    .buffer      = NULL,
-    .buffer_size = 0U,
-};
+const CaveTalk_Message_t   kCaveTalk_MessageNull   = CAVETALK_MESSAGE_NULL;
+const CaveTalk_Callbacks_t kCaveTalk_CallbacksNull = CAVETALK_CALLBACKS_NULL;
+const CaveTalk_Handle_t    kCaveTalk_HandleNull    = CAVETALK_HANDLE_NULL;
 
 static char              CaveTalk_DecodeBuffer[CAVETALK_MAX_PAYLOAD_SIZE];
 static const char *const kCaveTalk_KeyDelimiter                  = "/";
