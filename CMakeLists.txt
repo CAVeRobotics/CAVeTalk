@@ -8,14 +8,14 @@ set(CMAKE_CXX_STANDARD 20)
 set(CAVETALK_TARGET cavetalk)
 set(CAVETALK_TARGET_C ${CAVETALK_TARGET}c)
 set(CAVETALK_TARGET_CPP ${CAVETALK_TARGET}c++)
-set(EXTERNAL_DIR ${CMAKE_SOURCE_DIR}/external)
+set(EXTERNAL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external)
 
 option(CAVETALK_BUILD_TESTS "Build CAVeTalk tests" OFF)
 
 ################################################################################
 # Messages sources
 ################################################################################
-set(CAVETALK_MESSAGES_DIR ${CMAKE_SOURCE_DIR}/messages)
+set(CAVETALK_MESSAGES_DIR ${CMAKE_CURRENT_SOURCE_DIR}/messages)
 file(GLOB CAVETALK_MESSAGE_SRCS LIST_DIRECTORIES false CONFIGURE_DEPENDS
     "${CAVETALK_MESSAGES_DIR}/*.proto"
 )
@@ -87,7 +87,7 @@ endif()
 ################################################################################
 option(ABSL_PROPAGATE_CXX_STD "Propagate C++ standard to abseil-cpp" ON)
 set(PROTOBUF_INSTALL_DIR ${EXTERNAL_DIR}/protobuf/_build/protobuf-install)
-add_subdirectory(${CMAKE_SOURCE_DIR}/external/protobuf/third_party/abseil-cpp)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/external/protobuf/third_party/abseil-cpp)
 find_package(utf8_range CONFIG REQUIRED HINTS ${PROTOBUF_INSTALL_DIR})
 find_package(Protobuf CONFIG REQUIRED HINTS ${PROTOBUF_INSTALL_DIR})
 set(CPP_MESSAGES_OUT_DIR ${CMAKE_CURRENT_BINARY_DIR}/${CAVETALK_TARGET_CPP}_protos)
@@ -145,7 +145,7 @@ endif()
 ################################################################################
 # CI and tools
 ################################################################################
-set(TOOLS_DIR ${CMAKE_SOURCE_DIR}/tools)
+set(TOOLS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/tools)
 set(CPPCHECK_SOURCES ${COMMON_SRCS} ${CPP_SRCS} ${C_SRCS})
 include(${TOOLS_DIR}/cppcheck/cppcheck.cmake)
 set(UNCRUSTIFY_SOURCES ${CPPCHECK_SOURCES})
