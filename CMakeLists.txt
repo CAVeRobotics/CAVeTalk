@@ -14,6 +14,7 @@ set(GENERATED_DIR ${CMAKE_CURRENT_SOURCE_DIR}/generated)
 option(CAVETALK_BUILD_C "Build CAVeTalk C library" ON)
 option(CAVETALK_BUILD_CPP "Build CAVeTalk C++ library" ON)
 option(CAVETALK_BUILD_TESTS "Build CAVeTalk tests" OFF)
+option(CAVETALK_ENABLE_COVERAGE "Build CAVeTalk with coverage enabled" OFF)
 
 ################################################################################
 # Messages sources
@@ -79,11 +80,15 @@ if (CAVETALK_BUILD_C)
             PRIVATE
                 -Wall -Wextra -Werror -Wpedantic -fdiagnostics-color=always
                 -fPIC
-                $<$<CONFIG:Debug>:-g -O0 --coverage>
+                $<$<AND:$<CONFIG:Debug>,$<BOOL:${CAVETALK_ENABLE_COVERAGE}>>:
+                    -g -O0 --coverage
+                >
         )
         target_link_options(${CAVETALK_TARGET_C}
             PRIVATE
-                $<$<CONFIG:Debug>:--coverage>
+                $<$<AND:$<CONFIG:Debug>,$<BOOL:${CAVETALK_ENABLE_COVERAGE}>>:
+                    --coverage
+                >
         )
     # Add flags for other compilers here
     endif()
@@ -143,11 +148,15 @@ if (CAVETALK_BUILD_CPP)
             PRIVATE
                 -Wall -Wextra -Werror -Wno-missing-requires -fdiagnostics-color=always
                 -fPIC
-                $<$<CONFIG:Debug>:-g -O0 --coverage>
+                $<$<AND:$<CONFIG:Debug>,$<BOOL:${CAVETALK_ENABLE_COVERAGE}>>:
+                    -g -O0 --coverage
+                >
         )
         target_link_options(${CAVETALK_TARGET_CPP}
             PRIVATE
-                $<$<CONFIG:Debug>:--coverage>
+                $<$<AND:$<CONFIG:Debug>,$<BOOL:${CAVETALK_ENABLE_COVERAGE}>>:
+                    --coverage
+                >
         )
     # Add flags for other compilers here
     endif()
@@ -181,44 +190,50 @@ endif()
 ################################################################################
 # Coverage
 ################################################################################
-find_program(GCOVR_PATH gcovr
-    HINTS ~/.local/bin/
-)
-if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-    if(GCOVR_PATH)
-        message(STATUS "Found Gcovr at: ${GCOVR_PATH}")
-        string(REPLACE "+" "\\\\\\+" GCOVR_C_DIR "${C_DIR}")
-        string(REPLACE "+" "\\\\\\+" GCOVR_CPP_DIR "${CPP_DIR}")
-        set(GCOVR_ARGS
-            -r ${CMAKE_CURRENT_SOURCE_DIR}
-            -f ${GCOVR_C_DIR}
-            -f ${GCOVR_CPP_DIR}
-            --exclude-throw-branches
-            --gcov-ignore-parse-errors=suspicious_hits.warn
-            --gcov-ignore-parse-errors=negative_hits.warn
-        )
-        if(DEFINED ENV{GCOV_EXECUTABLE})
-            set(GCOVR_ARGS --gcov-executable $ENV{GCOV_EXECUTABLE} ${GCOVR_ARGS})
+if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR AND CAVETALK_ENABLE_COVERAGE)
+    if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+        if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+            find_program(GCOVR_PATH gcovr
+                HINTS "$ENV{HOME}/.local/bin"
+                    "/root/.local/bin"
+            )
+            if(GCOVR_PATH)
+                message(STATUS "Found Gcovr at: ${GCOVR_PATH}")
+                string(REPLACE "+" "\\\\\\+" GCOVR_C_DIR "${C_DIR}")
+                string(REPLACE "+" "\\\\\\+" GCOVR_CPP_DIR "${CPP_DIR}")
+                set(GCOVR_ARGS
+                    -r ${CMAKE_CURRENT_SOURCE_DIR}
+                    -f ${GCOVR_C_DIR}
+                    -f ${GCOVR_CPP_DIR}
+                    --exclude-throw-branches
+                    --gcov-ignore-parse-errors=suspicious_hits.warn
+                    --gcov-ignore-parse-errors=negative_hits.warn
+                )
+                # set(GCOVR_ARGS -r ${CMAKE_CURRENT_BINARY_DIR} -f ${INCLUDE_DIR} -f ${SRC_DIR} --exclude-throw-branches)
+                if(DEFINED ENV{GCOV_EXECUTABLE})
+                    set(GCOVR_ARGS --gcov-executable $ENV{GCOV_EXECUTABLE} ${GCOVR_ARGS})
+                endif()
+                add_custom_target(
+                    coverage
+                    COMMAND ${GCOVR_PATH} ${GCOVR_ARGS} --html-details --html-theme github.dark-green -o coverage.html
+                    COMMENT "Generating code coverage report..."
+                    DEPENDS test
+                )
+                add_custom_target(
+                    coverage-no-test
+                    COMMAND ${GCOVR_PATH} ${GCOVR_ARGS} --html-details --html-theme github.dark-green -o coverage.html
+                    COMMENT "Generating code coverage report..."
+                )
+                add_custom_target(
+                    sonarqube-coverage
+                    COMMAND ${GCOVR_PATH} ${GCOVR_ARGS} --sonarqube -o coverage.xml
+                    COMMENT "Generating code coverage report..."
+                )
+            else()
+                message(WARNING "Gcovr not found.")
+            endif()
         endif()
-        add_custom_target(
-            coverage
-            COMMAND ${GCOVR_PATH} ${GCOVR_ARGS} --html-details --html-theme github.dark-green -o coverage.html
-            COMMENT "Generating code coverage report..."
-            DEPENDS test
-        )
-        add_custom_target(
-            coverage-no-test
-            COMMAND ${GCOVR_PATH} ${GCOVR_ARGS} --html-details --html-theme github.dark-green -o coverage.html
-            COMMENT "Generating code coverage report..."
-        )
-        add_custom_target(
-            sonarqube-coverage
-            COMMAND ${GCOVR_PATH} ${GCOVR_ARGS} --sonarqube -o coverage.xml
-            COMMENT "Generating code coverage report..."
-        )
     else()
-        message(WARNING "Gcovr not found.")
+        message(WARNING "Gcovr does not support compiler.")
     endif()
-else()
-    message(WARNING "Gcovr does not support compiler.")
 endif()

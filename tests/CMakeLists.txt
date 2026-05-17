@@ -56,7 +56,9 @@ if (CAVETALK_BUILD_C)
         )
         target_link_options(${CAVETALK_TEST_TARGET_C}
             PRIVATE
-                $<$<CONFIG:Debug>:--coverage>
+                $<$<AND:$<CONFIG:Debug>,$<BOOL:${CAVETALK_ENABLE_COVERAGE}>>:
+                    --coverage
+                >
         )
     # Add flags for other compilers here
     endif()
@@ -89,7 +91,9 @@ if (CAVETALK_BUILD_CPP)
         )
         target_link_options(${CAVETALK_TEST_TARGET_CPP}
             PRIVATE
-                $<$<CONFIG:Debug>:--coverage>
+                $<$<AND:$<CONFIG:Debug>,$<BOOL:${CAVETALK_ENABLE_COVERAGE}>>:
+                    --coverage
+                >
         )
     # Add flags for other compilers here
     endif()

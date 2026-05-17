@@ -11,7 +11,8 @@
             "binaryDir": "${sourceDir}/build/${presetName}",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug",
-                "CAVETALK_BUILD_TESTS": "ON"
+                "CAVETALK_BUILD_TESTS": "ON",
+                "CAVETALK_ENABLE_COVERAGE": "ON"
             }
         },
         {
@@ -19,7 +20,8 @@
             "inherits": "Debug",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Release",
-                "CAVETALK_BUILD_TESTS": "OFF"
+                "CAVETALK_BUILD_TESTS": "OFF",
+                "CAVETALK_ENABLE_COVERAGE": "OFF"
             }
         }
     ],
