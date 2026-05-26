@@ -41,8 +41,8 @@ typedef uint32_t CaveTalk_Id_t;
 
 typedef struct
 {
-    char *key;
-    uint8_t *data;
+    const char *key;
+    const uint8_t *data;
     size_t size;
 } CaveTalk_Message_t;
 
