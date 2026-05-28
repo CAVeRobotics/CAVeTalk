@@ -32,13 +32,13 @@ const CaveTalk_Handle_t    kCaveTalk_HandleNull    = CAVETALK_HANDLE_NULL;
 static char              CaveTalk_DecodeBuffer[CAVETALK_MAX_PAYLOAD_SIZE];
 static const char *const kCaveTalk_KeyDelimiter                  = "/";
 static const char *const kCaveTalk_TopicKeys[cavetalk_Id_ID_MAX] = {
-    [cavetalk_Id_ID_NONE]         = "none",
-    [cavetalk_Id_ID_LOG]          = "log",
-    [cavetalk_Id_ID_ARM]          = "arm",
-    [cavetalk_Id_ID_DRIVE]        = "drive",
-    [cavetalk_Id_ID_ACCELERATION] = "acceleration",
-    [cavetalk_Id_ID_GYROSCOPE]    = "gyroscope",
-    [cavetalk_Id_ID_ENCODERS]     = "encoders",
+    [cavetalk_Id_ID_NONE]         = "None",
+    [cavetalk_Id_ID_LOG]          = "Log",
+    [cavetalk_Id_ID_ARM]          = "Arm",
+    [cavetalk_Id_ID_DRIVE]        = "Drive",
+    [cavetalk_Id_ID_ACCELERATION] = "Acceleration",
+    [cavetalk_Id_ID_GYROSCOPE]    = "Gyroscope",
+    [cavetalk_Id_ID_ENCODERS]     = "Encoders",
 };
 
 static cavetalk_Id CaveTalk_GetId(const CaveTalk_Handle_t *const handle, const char *const key);

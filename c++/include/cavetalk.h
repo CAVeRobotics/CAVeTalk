@@ -1,10 +1,12 @@
 #ifndef CAVETALK_H
 #define CAVETALK_H
 
-#include <cstddef>
-#include <memory>
+#include <cstdint>
+#include <optional>
 #include <string>
+#include <string_view>
 #include <utility>
+#include <variant>
 #include <vector>
 
 #include "acceleration.pb.h"
@@ -18,50 +20,24 @@
 namespace cavetalk
 {
 
-using Id_t      = std::uint32_t;
-using Message_t = std::pair<std::string, std::vector<std::uint8_t>>;
+using Peer    = std::uint32_t;
+using Message = std::variant<Acceleration, Arm, Drive, Encoders, Gyroscope, Log>;
 
-class Callbacks
+extern const std::string_view kDelimiter;
+
+std::optional<Message> Hear(const std::string_view key, const std::vector<std::uint8_t> &data);
+std::optional<std::pair<std::string, std::vector<std::uint8_t>>> Speak(const Peer peer, const Message &message);
+
+template <typename T>
+std::string GetKey(const Peer peer)
 {
-    public:
-        virtual ~Callbacks();
-        virtual void HearLog(const std::string &log);
-        virtual void HearArm(const Mode mode);
-        virtual void HearDrive(const Drive &drive);
-        virtual void HearAcceleration(const Acceleration &acceleration);
-        virtual void HearGyroscope(const Gyroscope &gyroscope);
-        virtual void HearEncoders(const Encoders &encoders);
-};
+    std::string key = std::to_string(peer);
 
-class CaveTalker
-{
-    public:
-        CaveTalker(const Id_t id, std::shared_ptr<Callbacks> callbacks);
-        CaveTalker(CaveTalker &cavetalker)                  = delete;
-        CaveTalker(CaveTalker &&cavetalker)                 = delete;
-        CaveTalker &operator=(const CaveTalker &cavetalker) = delete;
-        CaveTalker &operator=(CaveTalker &&cavetalker)      = delete;
-        void Hear(const Message_t &message) const;
-        Message_t SpeakLog(const std::string &log) const;
-        Message_t SpeakArm(const Mode mode) const;
-        Message_t SpeakDrive(const Drive &drive) const;
-        Message_t SpeakAcceleration(const Acceleration &acceleration) const;
-        Message_t SpeakGyroscope(const Gyroscope &gyroscope) const;
-        Message_t SpeakEncoders(const Encoders &encoders) const;
+    key += kDelimiter;
+    key += T::descriptor()->name();
 
-    private:
-        void HandleLog(const std::vector<std::uint8_t> &data) const;
-        void HandleArm(const std::vector<std::uint8_t> &data) const;
-        void HandleDrive(const std::vector<std::uint8_t> &data) const;
-        void HandleAcceleration(const std::vector<std::uint8_t> &data) const;
-        void HandleGyroscope(const std::vector<std::uint8_t> &data) const;
-        void HandleEncoders(const std::vector<std::uint8_t> &data) const;
-
-        Id_t id_;
-        std::shared_ptr<Callbacks> callbacks_;
-};
-
-std::string GetKey(const Id_t peer_id, const Id key_id);
+    return key;
+}
 
 } // namespace cavetalk
 
