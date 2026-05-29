@@ -20,13 +20,24 @@
 namespace cavetalk
 {
 
-using Peer    = std::uint32_t;
-using Message = std::variant<Acceleration, Arm, Drive, Encoders, Gyroscope, Log>;
+struct KeyDataPair;
+
+using Peer              = std::uint32_t;
+using Message           = std::variant<Acceleration, Arm, Drive, Encoders, Gyroscope, Log>;
+using ParsedMessage     = std::optional<Message>;
+using SerializedMessage = std::optional<KeyDataPair>;
 
 extern const std::string_view kDelimiter;
 
-std::optional<Message> Hear(const std::string_view key, const std::vector<std::uint8_t> &data);
-std::optional<std::pair<std::string, std::vector<std::uint8_t>>> Speak(const Peer peer, const Message &message);
+struct KeyDataPair
+{
+    std::string key;
+    std::vector<std::uint8_t> data;
+};
+
+ParsedMessage Hear(const std::string_view key, const std::vector<std::uint8_t> &data);
+ParsedMessage Hear(const KeyDataPair &key_data);
+SerializedMessage Speak(const Peer peer, const Message &message);
 
 template <typename T>
 std::string GetKey(const Peer peer)

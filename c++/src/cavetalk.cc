@@ -1,10 +1,7 @@
 #include "cavetalk.h"
 
-#include <array>
 #include <cstddef>
 #include <cstdint>
-#include <optional>
-#include <string>
 #include <string_view>
 #include <unordered_map>
 #include <utility>
@@ -26,11 +23,11 @@ namespace cavetalk
 const std::string_view kDelimiter = "/";
 
 template <typename T>
-static std::optional<Message> Parse(const std::vector<std::uint8_t> &data);
+static ParsedMessage Parse(const std::vector<std::uint8_t> &data);
 template <typename T>
-static std::optional<std::pair<std::string, std::vector<std::uint8_t>>> Serialize(const Peer peer, const T &message);
+static SerializedMessage Serialize(const Peer peer, const T &message);
 
-static const std::unordered_map<std::string_view, std::optional<Message> (*)(const std::vector<std::uint8_t> &)> kParsers = {
+static const std::unordered_map<std::string_view, ParsedMessage (*)(const std::vector<std::uint8_t> &)> kParsers = {
     {Log::descriptor()->name(), Parse<Log>},
     {Arm::descriptor()->name(), Parse<Arm>},
     {Drive::descriptor()->name(), Parse<Drive>},
@@ -39,12 +36,12 @@ static const std::unordered_map<std::string_view, std::optional<Message> (*)(con
     {Encoders::descriptor()->name(), Parse<Encoders>},
 };
 
-std::optional<Message> Hear(const std::string_view key, const std::vector<std::uint8_t> &data)
+ParsedMessage Hear(const std::string_view key, const std::vector<std::uint8_t> &data)
 {
-    std::optional<Message> message       = std::nullopt;
-    const std::size_t      name_position = key.find(kDelimiter);
+    ParsedMessage     message       = std::nullopt;
+    const std::size_t name_position = key.find(kDelimiter);
 
-    if (std::string::npos != name_position)
+    if (std::string_view::npos != name_position)
     {
         const std::string_view name   = key.substr(name_position + kDelimiter.length());
         const auto             parser = kParsers.find(name);
@@ -58,19 +55,24 @@ std::optional<Message> Hear(const std::string_view key, const std::vector<std::u
     return message;
 }
 
-std::optional<std::pair<std::string, std::vector<std::uint8_t>>> Speak(const Peer peer, const Message &message)
+ParsedMessage Hear(const KeyDataPair &key_data)
 {
-    return std::visit([peer](const auto &serialized)
+    return Hear(key_data.key, key_data.data);
+}
+
+SerializedMessage Speak(const Peer peer, const Message &message)
+{
+    return std::visit([peer](const auto &arg)
     {
-        return Serialize(peer, serialized);
+        return Serialize(peer, arg);
     }, message);
 }
 
 template <typename T>
-static std::optional<Message> Parse(const std::vector<std::uint8_t> &data)
+static ParsedMessage Parse(const std::vector<std::uint8_t> &data)
 {
-    std::optional<Message> parsed = std::nullopt;
-    T                      message;
+    ParsedMessage parsed = std::nullopt;
+    T             message;
 
     if (message.ParseFromArray(data.data(), data.size()))
     {
@@ -81,15 +83,15 @@ static std::optional<Message> Parse(const std::vector<std::uint8_t> &data)
 }
 
 template <typename T>
-static std::optional<std::pair<std::string, std::vector<std::uint8_t>>> Serialize(const Peer peer, const T &message)
+static SerializedMessage Serialize(const Peer peer, const T &message)
 {
-    std::optional<std::pair<std::string, std::vector<std::uint8_t>>> serialized = std::nullopt;
-    const std::size_t                                                size       = message.ByteSizeLong();
-    std::vector<std::uint8_t>                                        data(size);
+    SerializedMessage         serialized = std::nullopt;
+    const std::size_t         size       = message.ByteSizeLong();
+    std::vector<std::uint8_t> data(size);
 
     if (message.SerializeToArray(data.data(), size))
     {
-        serialized = std::make_pair(GetKey<T>(peer), std::move(data));
+        serialized = {.key = GetKey<T>(peer), .data = std::move(data)};
     }
 
     return serialized;
