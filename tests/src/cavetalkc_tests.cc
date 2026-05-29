@@ -93,10 +93,10 @@ MockCallbacks *CaveTalkC::mock_callbacks_ = nullptr;
 
 TEST_F(CaveTalkC, GetKey)
 {
-    ASSERT_STREQ("1234/drive", CaveTalk_GetKey(&speaker_handle_, 1234U, cavetalk_Id_ID_DRIVE));
-    ASSERT_STREQ("123456/acceleration", CaveTalk_GetKey(&speaker_handle_, 123456U, cavetalk_Id_ID_ACCELERATION));
-    ASSERT_STREQ("1234/log", CaveTalk_GetKey(&speaker_handle_, 1234U, cavetalk_Id_ID_LOG));
-    ASSERT_STREQ("123456/arm", CaveTalk_GetKey(&speaker_handle_, 123456U, cavetalk_Id_ID_ARM));
+    ASSERT_STREQ("1234/Drive", CaveTalk_GetKey(&speaker_handle_, 1234U, cavetalk_Id_ID_DRIVE));
+    ASSERT_STREQ("123456/Acceleration", CaveTalk_GetKey(&speaker_handle_, 123456U, cavetalk_Id_ID_ACCELERATION));
+    ASSERT_STREQ("1234/Log", CaveTalk_GetKey(&speaker_handle_, 1234U, cavetalk_Id_ID_LOG));
+    ASSERT_STREQ("123456/Arm", CaveTalk_GetKey(&speaker_handle_, 123456U, cavetalk_Id_ID_ARM));
 }
 
 TEST_F(CaveTalkC, SpeakAndHearLog)

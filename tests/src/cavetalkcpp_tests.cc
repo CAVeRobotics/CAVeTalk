@@ -4,28 +4,9 @@
 
 #include "cavetalk.h"
 
-class MockCallbacks : public cavetalk::Callbacks
-{
-public:
-    MOCK_METHOD(void, HearLog, (const std::string &log), (override));
-    MOCK_METHOD(void, HearArm, (const cavetalk::Mode mode), (override));
-    MOCK_METHOD(void, HearDrive, (const cavetalk::Drive &drive), (override));
-    MOCK_METHOD(void, HearAcceleration, (const cavetalk::Acceleration &acceleration), (override));
-    MOCK_METHOD(void, HearGyroscope, (const cavetalk::Gyroscope &gyroscope), (override));
-    MOCK_METHOD(void, HearEncoders, (const cavetalk::Encoders &encoders), (override));
-};
+static const cavetalk::Peer kPeer = 1234U;
 
-class CaveTalkCpp : public testing::Test
-{
-public:
-    CaveTalkCpp() : callbacks_(std::make_shared<MockCallbacks>()), cavetalker_(1234U, callbacks_) {}
-
-protected:
-    std::shared_ptr<MockCallbacks> callbacks_;
-    cavetalk::CaveTalker cavetalker_;
-};
-
-MATCHER_P(ProtoEq, expected, "")
+MATCHER_P(EqualsProto, expected, "")
 {
     google::protobuf::util::MessageDifferencer differencer;
     std::string difference;
@@ -43,29 +24,38 @@ MATCHER_P(ProtoEq, expected, "")
     return matched;
 }
 
-TEST_F(CaveTalkCpp, GetKey)
+TEST(CaveTalkCpp, GetKey)
 {
-    ASSERT_EQ("1234/drive", cavetalk::GetKey(1234U, cavetalk::ID_DRIVE));
-    ASSERT_EQ("123456/acceleration", cavetalk::GetKey(123456U, cavetalk::ID_ACCELERATION));
-    ASSERT_EQ("1234/log", cavetalk::GetKey(1234U, cavetalk::ID_LOG));
-    ASSERT_EQ("123456/arm", cavetalk::GetKey(123456U, cavetalk::ID_ARM));
+    ASSERT_EQ("1234/Drive", cavetalk::GetKey<cavetalk::Drive>(1234U));
+    ASSERT_EQ("123456/Acceleration", cavetalk::GetKey<cavetalk::Acceleration>(123456U));
+    ASSERT_EQ("1234/Log", cavetalk::GetKey<cavetalk::Log>(1234U));
+    ASSERT_EQ("123456/Arm", cavetalk::GetKey<cavetalk::Arm>(123456U));
 }
 
-TEST_F(CaveTalkCpp, SpeakAndHearLog)
+TEST(CaveTalkCpp, SpeakAndHearLog)
 {
     const std::string log_0 = "foobar";
     const std::string log_1 = "baz";
 
-    cavetalk::Message_t message = cavetalker_.SpeakLog(log_0);
-    EXPECT_CALL(*callbacks_, HearLog(testing::StrEq(log_0))).Times(1);
-    cavetalker_.Hear(message);
+    cavetalk::Log log_message;
+    log_message.set_log(log_0);
+    cavetalk::SerializedMessage serialized_message = cavetalk::Speak(kPeer, log_message);
+    ASSERT_NE(std::nullopt, serialized_message);
+    cavetalk::KeyDataPair key_data = serialized_message.value();
+    cavetalk::ParsedMessage parsed_message = cavetalk::Hear(key_data);
+    ASSERT_NE(std::nullopt, parsed_message);
+    ASSERT_EQ(log_0, std::get<cavetalk::Log>(parsed_message.value()).log());
 
-    message = cavetalker_.SpeakLog(log_1);
-    EXPECT_CALL(*callbacks_, HearLog(testing::StrEq(log_1))).Times(1);
-    cavetalker_.Hear(message);
+    log_message.set_log(log_1);
+    serialized_message = cavetalk::Speak(kPeer, log_message);
+    ASSERT_NE(std::nullopt, serialized_message);
+    key_data = serialized_message.value();
+    parsed_message = cavetalk::Hear(key_data);
+    ASSERT_NE(std::nullopt, parsed_message);
+    ASSERT_EQ(log_1, std::get<cavetalk::Log>(parsed_message.value()).log());
 }
 
-TEST_F(CaveTalkCpp, SpeakAndHearEncoders)
+TEST(CaveTalkCpp, SpeakAndHearEncoders)
 {
     cavetalk::Encoders encoders_0;
     cavetalk::Encoder *encoder = encoders_0.add_encoders();
@@ -78,9 +68,12 @@ TEST_F(CaveTalkCpp, SpeakAndHearEncoders)
     encoder->set_pulses(-370);
     encoder->set_rate_radians_per_second(1.7f);
 
-    cavetalk::Message_t message = cavetalker_.SpeakEncoders(encoders_0);
-    EXPECT_CALL(*callbacks_, HearEncoders(ProtoEq(encoders_0))).Times(1);
-    cavetalker_.Hear(message);
+    cavetalk::SerializedMessage serialized_message = cavetalk::Speak(kPeer, encoders_0);
+    ASSERT_NE(std::nullopt, serialized_message);
+    cavetalk::KeyDataPair key_data = serialized_message.value();
+    cavetalk::ParsedMessage parsed_message = cavetalk::Hear(key_data);
+    ASSERT_NE(std::nullopt, parsed_message);
+    ASSERT_THAT(std::get<cavetalk::Encoders>(parsed_message.value()), EqualsProto(encoders_0));
 
     cavetalk::Encoders encoders_1;
     encoder = encoders_1.add_encoders();
@@ -90,7 +83,10 @@ TEST_F(CaveTalkCpp, SpeakAndHearEncoders)
     encoder->set_pulses(260);
     encoder->set_rate_radians_per_second(-2.7f);
 
-    message = cavetalker_.SpeakEncoders(encoders_1);
-    EXPECT_CALL(*callbacks_, HearEncoders(ProtoEq(encoders_1))).Times(1);
-    cavetalker_.Hear(message);
+    serialized_message = cavetalk::Speak(kPeer, encoders_1);
+    ASSERT_NE(std::nullopt, serialized_message);
+    key_data = serialized_message.value();
+    parsed_message = cavetalk::Hear(key_data);
+    ASSERT_NE(std::nullopt, parsed_message);
+    ASSERT_THAT(std::get<cavetalk::Encoders>(parsed_message.value()), EqualsProto(encoders_1));
 }
