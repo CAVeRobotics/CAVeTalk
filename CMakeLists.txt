@@ -118,7 +118,10 @@ if (CAVETALK_BUILD_CPP)
             ${PROTOBUF_INSTALL_DIR}/include
             ${CPP_MESSAGES_OUT_DIR}
     )
-    target_compile_options(${CAVETALK_TARGET_CPP}_messages PRIVATE -Wno-missing-requires)
+    if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+        target_compile_options(${CAVETALK_TARGET_CPP}_messages PRIVATE -Wno-missing-requires)
+    # Add flags for other compilers here
+    endif()
 endif()
 
 ################################################################################
