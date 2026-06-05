@@ -8,11 +8,11 @@
 #include <vector>
 
 #include "acceleration.pb.h"
-#include "arm.pb.h"
 #include "drive.pb.h"
 #include "encoders.pb.h"
 #include "gyroscope.pb.h"
 #include "log.pb.h"
+#include "mode.pb.h"
 
 #define CAVETALK_UNUSED(arg) (void)(arg)
 
@@ -27,12 +27,13 @@ template <typename T>
 static SerializedMessage Serialize(const Peer peer, const T &message);
 
 static const std::unordered_map<std::string_view, ParsedMessage (*)(const std::vector<std::uint8_t> &)> kParsers = {
-    {Log::descriptor()->name(), Parse<Log>},
-    {Arm::descriptor()->name(), Parse<Arm>},
-    {Drive::descriptor()->name(), Parse<Drive>},
     {Acceleration::descriptor()->name(), Parse<Acceleration>},
-    {Gyroscope::descriptor()->name(), Parse<Gyroscope>},
+    {Drive::descriptor()->name(), Parse<Drive>},
     {Encoders::descriptor()->name(), Parse<Encoders>},
+    {Gyroscope::descriptor()->name(), Parse<Gyroscope>},
+    {Log::descriptor()->name(), Parse<Log>},
+    {SetMode::descriptor()->name(), Parse<SetMode>},
+    {GetMode::descriptor()->name(), Parse<GetMode>},
 };
 
 ParsedMessage Hear(const std::string_view key, const std::vector<std::uint8_t> &data)

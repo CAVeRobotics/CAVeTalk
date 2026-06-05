@@ -8,6 +8,10 @@ enum Mode {
     MODE_ARMED_AUTO = 2;
 }
 
-message Arm {
+message SetMode {
+    Mode mode = 1;
+}
+
+message GetMode {
     Mode mode = 1;
 }

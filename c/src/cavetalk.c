@@ -7,12 +7,12 @@
 #include <string.h>
 
 #include "acceleration.pb.h"
-#include "arm.pb.h"
 #include "drive.pb.h"
 #include "encoders.pb.h"
 #include "gyroscope.pb.h"
 #include "ids.pb.h"
 #include "log.pb.h"
+#include "mode.pb.h"
 #include "pb_decode.h"
 #include "pb_encode.h"
 
@@ -34,7 +34,8 @@ static const char *const kCaveTalk_KeyDelimiter                  = "/";
 static const char *const kCaveTalk_TopicKeys[cavetalk_Id_ID_MAX] = {
     [cavetalk_Id_ID_NONE]         = "None",
     [cavetalk_Id_ID_LOG]          = "Log",
-    [cavetalk_Id_ID_ARM]          = "Arm",
+    [cavetalk_Id_ID_SET_MODE]     = "SetMode",
+    [cavetalk_Id_ID_GET_MODE]     = "GetMode",
     [cavetalk_Id_ID_DRIVE]        = "Drive",
     [cavetalk_Id_ID_ACCELERATION] = "Acceleration",
     [cavetalk_Id_ID_GYROSCOPE]    = "Gyroscope",
@@ -45,7 +46,8 @@ static cavetalk_Id CaveTalk_GetId(const CaveTalk_Handle_t *const handle, const c
 static char *CaveTalk_BuildKey(const CaveTalk_Handle_t *const handle, const cavetalk_Id id);
 static CaveTalk_Message_t *CaveTalk_Speak(CaveTalk_Handle_t *handle, const cavetalk_Id id, const size_t data_size);
 static void CaveTalk_HandleLog(const CaveTalk_Handle_t *const handle, const CaveTalk_Message_t *const message);
-static void CaveTalk_HandleArm(const CaveTalk_Handle_t *const handle, const CaveTalk_Message_t *const message);
+static void CaveTalk_HandleSetMode(const CaveTalk_Handle_t *const handle, const CaveTalk_Message_t *const message);
+static void CaveTalk_HandleGetMode(const CaveTalk_Handle_t *const handle, const CaveTalk_Message_t *const message);
 static void CaveTalk_HandleDrive(const CaveTalk_Handle_t *const handle, const CaveTalk_Message_t *const message);
 static void CaveTalk_HandleAcceleration(const CaveTalk_Handle_t *const handle, const CaveTalk_Message_t *const message);
 static void CaveTalk_HandleGyroscope(const CaveTalk_Handle_t *const handle, const CaveTalk_Message_t *const message);
@@ -99,8 +101,11 @@ void CaveTalk_Hear(const CaveTalk_Handle_t *const handle, const CaveTalk_Message
         case cavetalk_Id_ID_LOG:
             CaveTalk_HandleLog(handle, &message);
             break;
-        case cavetalk_Id_ID_ARM:
-            CaveTalk_HandleArm(handle, &message);
+        case cavetalk_Id_ID_SET_MODE:
+            CaveTalk_HandleSetMode(handle, &message);
+            break;
+        case cavetalk_Id_ID_GET_MODE:
+            CaveTalk_HandleGetMode(handle, &message);
             break;
         case cavetalk_Id_ID_DRIVE:
             CaveTalk_HandleDrive(handle, &message);
@@ -142,20 +147,40 @@ CaveTalk_Message_t *CaveTalk_SpeakLog(CaveTalk_Handle_t *const handle, char *con
     return message;
 }
 
-CaveTalk_Message_t *CaveTalk_SpeakArm(CaveTalk_Handle_t *const handle, const cavetalk_Mode mode)
+CaveTalk_Message_t *CaveTalk_SpeakSetMode(CaveTalk_Handle_t *const handle, const cavetalk_Mode mode)
 {
     CaveTalk_Message_t *message = NULL;
 
     if (NULL != handle)
     {
-        pb_ostream_t ostream     = pb_ostream_from_buffer(handle->buffer, handle->buffer_size);
-        cavetalk_Arm arm_message = cavetalk_Arm_init_zero;
+        pb_ostream_t     ostream      = pb_ostream_from_buffer(handle->buffer, handle->buffer_size);
+        cavetalk_SetMode mode_message = cavetalk_SetMode_init_zero;
 
-        arm_message.mode = mode;
+        mode_message.mode = mode;
 
-        if (pb_encode(&ostream, cavetalk_Arm_fields, &arm_message))
+        if (pb_encode(&ostream, cavetalk_SetMode_fields, &mode_message))
         {
-            message = CaveTalk_Speak(handle, cavetalk_Id_ID_ARM, ostream.bytes_written);
+            message = CaveTalk_Speak(handle, cavetalk_Id_ID_SET_MODE, ostream.bytes_written);
+        }
+    }
+
+    return message;
+}
+
+CaveTalk_Message_t *CaveTalk_SpeakGetMode(CaveTalk_Handle_t *const handle, const cavetalk_Mode mode)
+{
+    CaveTalk_Message_t *message = NULL;
+
+    if (NULL != handle)
+    {
+        pb_ostream_t     ostream      = pb_ostream_from_buffer(handle->buffer, handle->buffer_size);
+        cavetalk_GetMode mode_message = cavetalk_GetMode_init_zero;
+
+        mode_message.mode = mode;
+
+        if (pb_encode(&ostream, cavetalk_GetMode_fields, &mode_message))
+        {
+            message = CaveTalk_Speak(handle, cavetalk_Id_ID_GET_MODE, ostream.bytes_written);
         }
     }
 
@@ -327,14 +352,25 @@ static void CaveTalk_HandleLog(const CaveTalk_Handle_t *const handle, const Cave
     }
 }
 
-static void CaveTalk_HandleArm(const CaveTalk_Handle_t *const handle, const CaveTalk_Message_t *const message)
+static void CaveTalk_HandleSetMode(const CaveTalk_Handle_t *const handle, const CaveTalk_Message_t *const message)
 {
-    pb_istream_t istream     = pb_istream_from_buffer(message->data, message->size);
-    cavetalk_Arm arm_message = cavetalk_Arm_init_zero;
+    pb_istream_t     istream      = pb_istream_from_buffer(message->data, message->size);
+    cavetalk_SetMode mode_message = cavetalk_SetMode_init_zero;
 
-    if ((NULL != handle->callbacks.hear_arm) && pb_decode(&istream, cavetalk_Arm_fields, &arm_message))
+    if ((NULL != handle->callbacks.hear_set_mode) && pb_decode(&istream, cavetalk_SetMode_fields, &mode_message))
     {
-        handle->callbacks.hear_arm(arm_message.mode);
+        handle->callbacks.hear_set_mode(mode_message.mode);
+    }
+}
+
+static void CaveTalk_HandleGetMode(const CaveTalk_Handle_t *const handle, const CaveTalk_Message_t *const message)
+{
+    pb_istream_t     istream      = pb_istream_from_buffer(message->data, message->size);
+    cavetalk_GetMode mode_message = cavetalk_GetMode_init_zero;
+
+    if ((NULL != handle->callbacks.hear_get_mode) && pb_decode(&istream, cavetalk_GetMode_fields, &mode_message))
+    {
+        handle->callbacks.hear_get_mode(mode_message.mode);
     }
 }
 

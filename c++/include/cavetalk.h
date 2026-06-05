@@ -9,11 +9,11 @@
 #include <vector>
 
 #include "acceleration.pb.h"
-#include "arm.pb.h"
 #include "drive.pb.h"
 #include "encoders.pb.h"
 #include "gyroscope.pb.h"
 #include "log.pb.h"
+#include "mode.pb.h"
 
 namespace cavetalk
 {
@@ -21,7 +21,7 @@ namespace cavetalk
 struct KeyDataPair;
 
 using Peer              = std::uint32_t;
-using Message           = std::variant<Acceleration, Arm, Drive, Encoders, Gyroscope, Log>;
+using Message           = std::variant<Acceleration, Drive, Encoders, Gyroscope, Log, SetMode, GetMode>;
 using ParsedMessage     = std::optional<Message>;
 using SerializedMessage = std::optional<KeyDataPair>;
 

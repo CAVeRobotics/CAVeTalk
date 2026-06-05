@@ -29,7 +29,8 @@ TEST(CaveTalkCpp, GetKey)
     ASSERT_EQ("1234/Drive", cavetalk::GetKey<cavetalk::Drive>(1234U));
     ASSERT_EQ("123456/Acceleration", cavetalk::GetKey<cavetalk::Acceleration>(123456U));
     ASSERT_EQ("1234/Log", cavetalk::GetKey<cavetalk::Log>(1234U));
-    ASSERT_EQ("123456/Arm", cavetalk::GetKey<cavetalk::Arm>(123456U));
+    ASSERT_EQ("123456/SetMode", cavetalk::GetKey<cavetalk::SetMode>(123456U));
+    ASSERT_EQ("123456/GetMode", cavetalk::GetKey<cavetalk::GetMode>(123456U));
 }
 
 TEST(CaveTalkCpp, SpeakAndHearLog)

@@ -5,10 +5,11 @@ package cavetalk;
 enum Id {
     ID_NONE = 0;
     ID_LOG = 1;
-    ID_ARM = 2;
-    ID_DRIVE = 3;
-    ID_ACCELERATION = 4;
-    ID_GYROSCOPE = 5;
-    ID_ENCODERS = 6;
-    ID_MAX = 7;
+    ID_SET_MODE = 2;
+    ID_GET_MODE = 3;
+    ID_DRIVE = 4;
+    ID_ACCELERATION = 5;
+    ID_GYROSCOPE = 6;
+    ID_ENCODERS = 7;
+    ID_MAX = 8;
 }

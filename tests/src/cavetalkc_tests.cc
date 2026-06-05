@@ -96,7 +96,8 @@ TEST_F(CaveTalkC, GetKey)
     ASSERT_STREQ("1234/Drive", CaveTalk_GetKey(&speaker_handle_, 1234U, cavetalk_Id_ID_DRIVE));
     ASSERT_STREQ("123456/Acceleration", CaveTalk_GetKey(&speaker_handle_, 123456U, cavetalk_Id_ID_ACCELERATION));
     ASSERT_STREQ("1234/Log", CaveTalk_GetKey(&speaker_handle_, 1234U, cavetalk_Id_ID_LOG));
-    ASSERT_STREQ("123456/Arm", CaveTalk_GetKey(&speaker_handle_, 123456U, cavetalk_Id_ID_ARM));
+    ASSERT_STREQ("123456/SetMode", CaveTalk_GetKey(&speaker_handle_, 123456U, cavetalk_Id_ID_SET_MODE));
+    ASSERT_STREQ("123456/GetMode", CaveTalk_GetKey(&speaker_handle_, 123456U, cavetalk_Id_ID_GET_MODE));
 }
 
 TEST_F(CaveTalkC, SpeakAndHearLog)
