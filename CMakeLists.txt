@@ -44,7 +44,7 @@ if (CAVETALK_BUILD_C)
         PUBLIC
             ${C_MESSAGES_OUT_DIR}
     )
-    if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+    if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang" AND NOT CMAKE_SYSTEM_NAME STREQUAL "Generic")
         target_compile_options(${CAVETALK_TARGET_C}_messages
             PRIVATE
                 -fPIC
@@ -79,11 +79,16 @@ if (CAVETALK_BUILD_C)
         target_compile_options(${CAVETALK_TARGET_C}
             PRIVATE
                 -Wall -Wextra -Werror -Wpedantic -fdiagnostics-color=always
-                -fPIC
                 $<$<AND:$<CONFIG:Debug>,$<BOOL:${CAVETALK_ENABLE_COVERAGE}>>:
                     -g -O0 --coverage
                 >
         )
+        if(NOT CMAKE_SYSTEM_NAME STREQUAL "Generic")
+            target_compile_options(${CAVETALK_TARGET_C}
+                PRIVATE
+                    -fPIC
+            )
+        endif()
         target_link_options(${CAVETALK_TARGET_C}
             PRIVATE
                 $<$<AND:$<CONFIG:Debug>,$<BOOL:${CAVETALK_ENABLE_COVERAGE}>>:
