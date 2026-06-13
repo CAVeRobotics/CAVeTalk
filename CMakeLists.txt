@@ -162,7 +162,7 @@ if (CAVETALK_BUILD_CPP)
                 >
         )
         if(NOT CMAKE_SYSTEM_NAME STREQUAL "Generic")
-            target_compile_options(${CAVETALK_TARGET_C}
+            target_compile_options(${CAVETALK_TARGET_CPP}
                 PRIVATE
                     -fPIC
             )
