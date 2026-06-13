@@ -139,3 +139,23 @@ TEST(CaveTalkCpp, SpeakAndHearEncoders)
     ASSERT_NE(std::nullopt, parsed_message);
     ASSERT_THAT(std::get<cavetalk::Encoders>(parsed_message.value()), EqualsProto(encoders_1));
 }
+
+TEST(CaveTalkCpp, SpeakAndHearFaults)
+{
+    cavetalk::Faults faults_message;
+    faults_message.set_mask(0U);
+    cavetalk::SerializedMessage serialized_message = cavetalk::Speak(kPeer, faults_message);
+    ASSERT_NE(std::nullopt, serialized_message);
+    cavetalk::KeyDataPair key_data = serialized_message.value();
+    cavetalk::ParsedMessage parsed_message = cavetalk::Hear(key_data);
+    ASSERT_NE(std::nullopt, parsed_message);
+    ASSERT_EQ(0U, std::get<cavetalk::Faults>(parsed_message.value()).mask());
+
+    faults_message.set_mask(cavetalk::Fault::FAULT_MEMORY | cavetalk::Fault::FAULT_COMMS);
+    serialized_message = cavetalk::Speak(kPeer, faults_message);
+    ASSERT_NE(std::nullopt, serialized_message);
+    key_data = serialized_message.value();
+    parsed_message = cavetalk::Hear(key_data);
+    ASSERT_NE(std::nullopt, parsed_message);
+    ASSERT_EQ(cavetalk::Fault::FAULT_MEMORY | cavetalk::Fault::FAULT_COMMS, std::get<cavetalk::Faults>(parsed_message.value()).mask());
+}

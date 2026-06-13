@@ -1,0 +1,27 @@
+edition = "2023";
+
+package cavetalk;
+
+enum Fault {
+    option features.enum_type = CLOSED;
+
+    FAULT_MEMORY = 1;
+    FAULT_SCHEDULER = 2;
+    FAULT_TIMER = 4;
+    FAULT_MOTOR = 8;
+    FAULT_ACCELEROMETER = 16;
+    FAULT_GYROSCOPE = 32;
+    FAULT_ENCODER = 64;
+    FAULT_COMMS = 128;
+    FAULT_LOGGING = 256;
+    FAULT_RGBW = 512;
+    FAULT_BUZZER = 1024;
+}
+
+message Faults {
+    uint32 mask = 1;
+}
+
+message ClearFaults {
+    uint32 mask = 1;
+}

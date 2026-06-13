@@ -11,5 +11,7 @@ enum Id {
     ID_ACCELERATION = 5;
     ID_GYROSCOPE = 6;
     ID_ENCODERS = 7;
-    ID_MAX = 8;
+    ID_FAULTS = 8;
+    ID_CLEAR_FAULTS = 9;
+    ID_MAX = 10;
 }

@@ -17,6 +17,8 @@ public:
     virtual void HearAcceleration(const cavetalk_Acceleration *const acceleration) const = 0;
     virtual void HearGyroscope(const cavetalk_Gyroscope *const gyroscope) const = 0;
     virtual void HearEncoders(const cavetalk_Encoder *const encoders, const std::size_t count) const = 0;
+    virtual void HearFaults(const cavetalk_Faults *const faults) const = 0;
+    virtual void HearClearFaults(const cavetalk_ClearFaults *const faults) const = 0;
 };
 
 class MockCallbacks : public Callbacks
@@ -29,6 +31,8 @@ public:
     MOCK_METHOD(void, HearAcceleration, (const cavetalk_Acceleration *const acceleration), (const, override));
     MOCK_METHOD(void, HearGyroscope, (const cavetalk_Gyroscope *const gyroscope), (const, override));
     MOCK_METHOD(void, HearEncoders, (const cavetalk_Encoder *const encoders, const std::size_t count), (const, override));
+    MOCK_METHOD(void, HearFaults, (const cavetalk_Faults *const faults), (const, override));
+    MOCK_METHOD(void, HearClearFaults, (const cavetalk_ClearFaults *const faults), (const, override));
 };
 
 class CaveTalkC : public testing::Test
@@ -69,6 +73,16 @@ protected:
         mock_callbacks_->HearEncoders(encoders, count);
     }
 
+    static void HearFaults(const cavetalk_Faults *const faults)
+    {
+        mock_callbacks_->HearFaults(faults);
+    }
+
+    static void HearClearFaults(const cavetalk_ClearFaults *const faults)
+    {
+        mock_callbacks_->HearClearFaults(faults);
+    }
+
     void SetUp() override
     {
         mock_callbacks_ = new MockCallbacks;
@@ -78,6 +92,8 @@ protected:
         listener_callbacks.hear_set_mode = HearSetMode;
         listener_callbacks.hear_acceleration = HearAcceleration;
         listener_callbacks.hear_encoders = HearEncoders;
+        listener_callbacks.hear_faults = HearFaults;
+        listener_callbacks.hear_clear_faults = HearClearFaults;
 
         CaveTalk_Initialize(&speaker_handle_, &kCaveTalk_CallbacksNull, speaker_id_, speaker_buffer_, sizeof(speaker_buffer_));
         CaveTalk_Initialize(&listener_handle_, &listener_callbacks, listener_id_, listener_buffer_, sizeof(listener_buffer_));
@@ -211,5 +227,20 @@ TEST_F(CaveTalkC, SpeakAndHearEncoders)
                                                           return true; }),
                                       encoders_1_count))
         .Times(1);
+    CaveTalk_Hear(&listener_handle_, *message);
+}
+
+TEST_F(CaveTalkC, SpeakAndHearFaults)
+{
+    cavetalk_Faults faults = {.mask = 0U};
+    CaveTalk_Message_t *message = CaveTalk_SpeakFaults(&speaker_handle_, &faults);
+    ASSERT_NE(nullptr, message);
+    EXPECT_CALL(*mock_callbacks_, HearFaults(testing::Pointee(testing::Field(&cavetalk_Faults::mask, 0U)))).Times(1);
+    CaveTalk_Hear(&listener_handle_, *message);
+
+    faults = {.mask = cavetalk_Fault_FAULT_MEMORY | cavetalk_Fault_FAULT_COMMS};
+    message = CaveTalk_SpeakFaults(&speaker_handle_, &faults);
+    ASSERT_NE(nullptr, message);
+    EXPECT_CALL(*mock_callbacks_, HearFaults(testing::Pointee(testing::Field(&cavetalk_Faults::mask, cavetalk_Fault_FAULT_MEMORY | cavetalk_Fault_FAULT_COMMS)))).Times(1);
     CaveTalk_Hear(&listener_handle_, *message);
 }

@@ -11,6 +11,7 @@
 #include "acceleration.pb.h"
 #include "drive.pb.h"
 #include "encoders.pb.h"
+#include "faults.pb.h"
 #include "gyroscope.pb.h"
 #include "log.pb.h"
 #include "mode.pb.h"
@@ -21,7 +22,7 @@ namespace cavetalk
 struct KeyDataPair;
 
 using Peer              = std::uint32_t;
-using Message           = std::variant<Acceleration, Drive, Encoders, Gyroscope, Log, SetMode, GetMode>;
+using Message           = std::variant<Acceleration, Drive, Encoders, Faults, ClearFaults, Gyroscope, Log, SetMode, GetMode>;
 using ParsedMessage     = std::optional<Message>;
 using SerializedMessage = std::optional<KeyDataPair>;
 

@@ -10,6 +10,7 @@
 #include "acceleration.pb.h"
 #include "drive.pb.h"
 #include "encoders.pb.h"
+#include "faults.pb.h"
 #include "gyroscope.pb.h"
 #include "log.pb.h"
 #include "mode.pb.h"
@@ -30,6 +31,8 @@ static const std::unordered_map<std::string_view, ParsedMessage (*)(const std::v
     {Acceleration::descriptor()->name(), Parse<Acceleration>},
     {Drive::descriptor()->name(), Parse<Drive>},
     {Encoders::descriptor()->name(), Parse<Encoders>},
+    {Faults::descriptor()->name(), Parse<Faults>},
+    {ClearFaults::descriptor()->name(), Parse<ClearFaults>},
     {Gyroscope::descriptor()->name(), Parse<Gyroscope>},
     {Log::descriptor()->name(), Parse<Log>},
     {SetMode::descriptor()->name(), Parse<SetMode>},

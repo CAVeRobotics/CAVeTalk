@@ -8,6 +8,7 @@
 #include "acceleration.pb.h"
 #include "drive.pb.h"
 #include "encoders.pb.h"
+#include "faults.pb.h"
 #include "gyroscope.pb.h"
 #include "ids.pb.h"
 #include "log.pb.h"
@@ -29,6 +30,8 @@
             .hear_acceleration = NULL, \
             .hear_gyroscope    = NULL, \
             .hear_encoders     = NULL, \
+            .hear_faults       = NULL, \
+            .hear_clear_faults = NULL, \
         }
 #define CAVETALK_HANDLE_NULL                        \
         {                                           \
@@ -57,6 +60,8 @@ typedef struct
     void (*hear_acceleration)(const cavetalk_Acceleration *const acceleration);
     void (*hear_gyroscope)(const cavetalk_Gyroscope *const gyroscope);
     void (*hear_encoders)(const cavetalk_Encoder *const encoders, const size_t count);
+    void (*hear_faults)(const cavetalk_Faults *const faults);
+    void (*hear_clear_faults)(const cavetalk_ClearFaults *const faults);
 } CaveTalk_Callbacks_t;
 
 typedef struct
@@ -87,6 +92,8 @@ CaveTalk_Message_t *CaveTalk_SpeakDrive(CaveTalk_Handle_t *const handle, cavetal
 CaveTalk_Message_t *CaveTalk_SpeakAcceleration(CaveTalk_Handle_t *const handle, cavetalk_Acceleration *const acceleration);
 CaveTalk_Message_t *CaveTalk_SpeakGyroscope(CaveTalk_Handle_t *const handle, cavetalk_Gyroscope *const gyroscope);
 CaveTalk_Message_t *CaveTalk_SpeakEncoders(CaveTalk_Handle_t *const handle, cavetalk_Encoder *const encoders, const size_t count);
+CaveTalk_Message_t *CaveTalk_SpeakFaults(CaveTalk_Handle_t *const handle, cavetalk_Faults *const faults);
+CaveTalk_Message_t *CaveTalk_SpeakClearFaults(CaveTalk_Handle_t *const handle, cavetalk_ClearFaults *const faults);
 
 #ifdef __cplusplus
 }

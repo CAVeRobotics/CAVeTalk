@@ -9,6 +9,7 @@
 #include "acceleration.pb.h"
 #include "drive.pb.h"
 #include "encoders.pb.h"
+#include "faults.pb.h"
 #include "gyroscope.pb.h"
 #include "ids.pb.h"
 #include "log.pb.h"
@@ -40,6 +41,8 @@ static const char *const kCaveTalk_TopicKeys[cavetalk_Id_ID_MAX] = {
     [cavetalk_Id_ID_ACCELERATION] = "Acceleration",
     [cavetalk_Id_ID_GYROSCOPE]    = "Gyroscope",
     [cavetalk_Id_ID_ENCODERS]     = "Encoders",
+    [cavetalk_Id_ID_FAULTS]       = "Faults",
+    [cavetalk_Id_ID_CLEAR_FAULTS] = "ClearFaults",
 };
 
 static cavetalk_Id CaveTalk_GetId(const CaveTalk_Handle_t *const handle, const char *const key);
@@ -52,6 +55,8 @@ static void CaveTalk_HandleDrive(const CaveTalk_Handle_t *const handle, const Ca
 static void CaveTalk_HandleAcceleration(const CaveTalk_Handle_t *const handle, const CaveTalk_Message_t *const message);
 static void CaveTalk_HandleGyroscope(const CaveTalk_Handle_t *const handle, const CaveTalk_Message_t *const message);
 static void CaveTalk_HandleEncoders(const CaveTalk_Handle_t *const handle, const CaveTalk_Message_t *const message);
+static void CaveTalk_HandleFaults(const CaveTalk_Handle_t *const handle, const CaveTalk_Message_t *const message);
+static void CaveTalk_HandleClearFaults(const CaveTalk_Handle_t *const handle, const CaveTalk_Message_t *const message);
 static bool CaveTalk_EncodeString(pb_ostream_t *stream, const pb_field_t *field, void *const *arg);
 static bool CaveTalk_DecodeString(pb_istream_t *stream, const pb_field_t *field, void **arg);
 static bool CaveTalk_EncodeRepeatedEncoderSubmessage(pb_ostream_t *stream, const pb_field_t *field, void *const *arg);
@@ -118,6 +123,12 @@ void CaveTalk_Hear(const CaveTalk_Handle_t *const handle, const CaveTalk_Message
             break;
         case cavetalk_Id_ID_ENCODERS:
             CaveTalk_HandleEncoders(handle, &message);
+            break;
+        case cavetalk_Id_ID_FAULTS:
+            CaveTalk_HandleFaults(handle, &message);
+            break;
+        case cavetalk_Id_ID_CLEAR_FAULTS:
+            CaveTalk_HandleClearFaults(handle, &message);
             break;
         case cavetalk_Id_ID_NONE:
         default:
@@ -272,6 +283,44 @@ CaveTalk_Message_t *CaveTalk_SpeakEncoders(CaveTalk_Handle_t *const handle, cave
         if (pb_encode(&ostream, cavetalk_Encoders_fields, &encoders_message))
         {
             message = CaveTalk_Speak(handle, cavetalk_Id_ID_ENCODERS, ostream.bytes_written);
+        }
+    }
+
+    return message;
+}
+
+CaveTalk_Message_t *CaveTalk_SpeakFaults(CaveTalk_Handle_t *const handle, cavetalk_Faults *const faults)
+{
+    CaveTalk_Message_t *message = NULL;
+
+    if ((NULL != handle) && (NULL != faults))
+    {
+        pb_ostream_t ostream = pb_ostream_from_buffer(handle->buffer, handle->buffer_size);
+
+        faults->has_mask = true;
+
+        if (pb_encode(&ostream, cavetalk_Faults_fields, faults))
+        {
+            message = CaveTalk_Speak(handle, cavetalk_Id_ID_FAULTS, ostream.bytes_written);
+        }
+    }
+
+    return message;
+}
+
+CaveTalk_Message_t *CaveTalk_SpeakClearFaults(CaveTalk_Handle_t *const handle, cavetalk_ClearFaults *const faults)
+{
+    CaveTalk_Message_t *message = NULL;
+
+    if ((NULL != handle) && (NULL != faults))
+    {
+        pb_ostream_t ostream = pb_ostream_from_buffer(handle->buffer, handle->buffer_size);
+
+        faults->has_mask = true;
+
+        if (pb_encode(&ostream, cavetalk_ClearFaults_fields, faults))
+        {
+            message = CaveTalk_Speak(handle, cavetalk_Id_ID_CLEAR_FAULTS, ostream.bytes_written);
         }
     }
 
@@ -434,6 +483,28 @@ static void CaveTalk_HandleEncoders(const CaveTalk_Handle_t *const handle, const
     if ((NULL != handle->callbacks.hear_encoders) && pb_decode(&istream, cavetalk_Encoders_fields, &encoders_message))
     {
         handle->callbacks.hear_encoders((const cavetalk_Encoder *const)CaveTalk_DecodeBuffer, count);
+    }
+}
+
+static void CaveTalk_HandleFaults(const CaveTalk_Handle_t *const handle, const CaveTalk_Message_t *const message)
+{
+    pb_istream_t    istream        = pb_istream_from_buffer(message->data, message->size);
+    cavetalk_Faults faults_message = cavetalk_Faults_init_zero;
+
+    if ((NULL != handle->callbacks.hear_faults) && pb_decode(&istream, cavetalk_Faults_fields, &faults_message))
+    {
+        handle->callbacks.hear_faults(&faults_message);
+    }
+}
+
+static void CaveTalk_HandleClearFaults(const CaveTalk_Handle_t *const handle, const CaveTalk_Message_t *const message)
+{
+    pb_istream_t         istream              = pb_istream_from_buffer(message->data, message->size);
+    cavetalk_ClearFaults clear_faults_message = cavetalk_ClearFaults_init_zero;
+
+    if ((NULL != handle->callbacks.hear_clear_faults) && pb_decode(&istream, cavetalk_ClearFaults_fields, &clear_faults_message))
+    {
+        handle->callbacks.hear_clear_faults(&clear_faults_message);
     }
 }
 
