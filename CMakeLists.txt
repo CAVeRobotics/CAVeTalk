@@ -155,11 +155,16 @@ if (CAVETALK_BUILD_CPP)
         target_compile_options(${CAVETALK_TARGET_CPP}
             PRIVATE
                 -Wall -Wextra -Werror -Wno-missing-requires -fdiagnostics-color=always
-                -fPIC
                 $<$<AND:$<CONFIG:Debug>,$<BOOL:${CAVETALK_ENABLE_COVERAGE}>>:
                     -g -O0 --coverage
                 >
         )
+        if(NOT CMAKE_SYSTEM_NAME STREQUAL "Generic")
+            target_compile_options(${CAVETALK_TARGET_C}
+                PRIVATE
+                    -fPIC
+            )
+        endif()
         target_link_options(${CAVETALK_TARGET_CPP}
             PRIVATE
                 $<$<AND:$<CONFIG:Debug>,$<BOOL:${CAVETALK_ENABLE_COVERAGE}>>:
