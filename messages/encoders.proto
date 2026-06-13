@@ -1,10 +1,10 @@
-syntax = "proto3";
+edition = "2023";
 
 package cavetalk;
 
 message Encoder {
-    optional sint64 pulses = 1;
-    optional float rate_radians_per_second = 2;
+    sint64 pulses = 1;
+    float rate_radians_per_second = 2;
 }
 
 message Encoders {

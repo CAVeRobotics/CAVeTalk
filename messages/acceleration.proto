@@ -1,9 +1,9 @@
-syntax = "proto3";
+edition = "2023";
 
 package cavetalk;
 
 message Acceleration {
-    optional float x_meters_per_second_squared = 1;
-    optional float y_meters_per_second_squared = 2;
-    optional float z_meters_per_second_squared = 3;
+    float x_meters_per_second_squared = 1;
+    float y_meters_per_second_squared = 2;
+    float z_meters_per_second_squared = 3;
 }

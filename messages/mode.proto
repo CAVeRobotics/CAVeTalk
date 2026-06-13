@@ -1,4 +1,4 @@
-syntax = "proto3";
+edition = "2023";
 
 package cavetalk;
 
@@ -10,9 +10,9 @@ enum Mode {
 }
 
 message SetMode {
-    Mode mode = 1;
+    Mode mode = 1 [features.field_presence = IMPLICIT];
 }
 
 message GetMode {
-    Mode mode = 1;
+    Mode mode = 1 [features.field_presence = IMPLICIT];
 }

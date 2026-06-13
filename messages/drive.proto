@@ -1,8 +1,8 @@
-syntax = "proto3";
+edition = "2023";
 
 package cavetalk;
 
 message Drive {
-    optional float speed_meters_per_second = 1;
-    optional float turn_rate_radians_per_second = 2;
+    float speed_meters_per_second = 1;
+    float turn_rate_radians_per_second = 2;
 }
