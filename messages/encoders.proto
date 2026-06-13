@@ -3,8 +3,8 @@ syntax = "proto3";
 package cavetalk;
 
 message Encoder {
-    sint64 pulses = 1;
-    float rate_radians_per_second = 2;
+    optional sint64 pulses = 1;
+    optional float rate_radians_per_second = 2;
 }
 
 message Encoders {

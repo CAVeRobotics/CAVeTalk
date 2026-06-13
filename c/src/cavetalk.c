@@ -54,8 +54,8 @@ static void CaveTalk_HandleGyroscope(const CaveTalk_Handle_t *const handle, cons
 static void CaveTalk_HandleEncoders(const CaveTalk_Handle_t *const handle, const CaveTalk_Message_t *const message);
 static bool CaveTalk_EncodeString(pb_ostream_t *stream, const pb_field_t *field, void *const *arg);
 static bool CaveTalk_DecodeString(pb_istream_t *stream, const pb_field_t *field, void **arg);
-static bool CaveTalk_EncodeRepeatedSubmessage(pb_ostream_t *stream, const pb_field_t *field, void *const *arg);
-static bool CaveTalk_DecodeRepeatedSubmessage(pb_istream_t *stream, const pb_field_t *field, void **arg);
+static bool CaveTalk_EncodeRepeatedEncoderSubmessage(pb_ostream_t *stream, const pb_field_t *field, void *const *arg);
+static bool CaveTalk_DecodeRepeatedEncoderSubmessage(pb_istream_t *stream, const pb_field_t *field, void **arg);
 
 bool CaveTalk_Initialize(CaveTalk_Handle_t *const handle, const CaveTalk_Callbacks_t *const callbacks, const CaveTalk_Id_t id, uint8_t *const buffer, const size_t buffer_size)
 {
@@ -187,13 +187,16 @@ CaveTalk_Message_t *CaveTalk_SpeakGetMode(CaveTalk_Handle_t *const handle, const
     return message;
 }
 
-CaveTalk_Message_t *CaveTalk_SpeakDrive(CaveTalk_Handle_t *const handle, const cavetalk_Drive *const drive)
+CaveTalk_Message_t *CaveTalk_SpeakDrive(CaveTalk_Handle_t *const handle, cavetalk_Drive *const drive)
 {
     CaveTalk_Message_t *message = NULL;
 
     if ((NULL != handle) && (NULL != drive))
     {
         pb_ostream_t ostream = pb_ostream_from_buffer(handle->buffer, handle->buffer_size);
+
+        drive->has_speed_meters_per_second      = true;
+        drive->has_turn_rate_radians_per_second = true;
 
         if (pb_encode(&ostream, cavetalk_Drive_fields, drive))
         {
@@ -204,13 +207,17 @@ CaveTalk_Message_t *CaveTalk_SpeakDrive(CaveTalk_Handle_t *const handle, const c
     return message;
 }
 
-CaveTalk_Message_t *CaveTalk_SpeakAcceleration(CaveTalk_Handle_t *const handle, const cavetalk_Acceleration *const acceleration)
+CaveTalk_Message_t *CaveTalk_SpeakAcceleration(CaveTalk_Handle_t *const handle, cavetalk_Acceleration *const acceleration)
 {
     CaveTalk_Message_t *message = NULL;
 
     if ((NULL != handle) && (NULL != acceleration))
     {
         pb_ostream_t ostream = pb_ostream_from_buffer(handle->buffer, handle->buffer_size);
+
+        acceleration->has_x_meters_per_second_squared = true;
+        acceleration->has_y_meters_per_second_squared = true;
+        acceleration->has_z_meters_per_second_squared = true;
 
         if (pb_encode(&ostream, cavetalk_Acceleration_fields, acceleration))
         {
@@ -221,13 +228,21 @@ CaveTalk_Message_t *CaveTalk_SpeakAcceleration(CaveTalk_Handle_t *const handle, 
     return message;
 }
 
-CaveTalk_Message_t *CaveTalk_SpeakGyroscope(CaveTalk_Handle_t *const handle, const cavetalk_Gyroscope *const gyroscope)
+CaveTalk_Message_t *CaveTalk_SpeakGyroscope(CaveTalk_Handle_t *const handle, cavetalk_Gyroscope *const gyroscope)
 {
     CaveTalk_Message_t *message = NULL;
 
     if ((NULL != handle) && (NULL != gyroscope))
     {
         pb_ostream_t ostream = pb_ostream_from_buffer(handle->buffer, handle->buffer_size);
+
+        gyroscope->has_roll_radians_per_second  = true;
+        gyroscope->has_pitch_radians_per_second = true;
+        gyroscope->has_yaw_radians_per_second   = true;
+        gyroscope->has_w                        = true;
+        gyroscope->has_x                        = true;
+        gyroscope->has_y                        = true;
+        gyroscope->has_z                        = true;
 
         if (pb_encode(&ostream, cavetalk_Gyroscope_fields, gyroscope))
         {
@@ -252,7 +267,7 @@ CaveTalk_Message_t *CaveTalk_SpeakEncoders(CaveTalk_Handle_t *const handle, cave
         };
 
         encoders_message.encoders.arg          = &encoder_list;
-        encoders_message.encoders.funcs.encode = CaveTalk_EncodeRepeatedSubmessage;
+        encoders_message.encoders.funcs.encode = CaveTalk_EncodeRepeatedEncoderSubmessage;
 
         if (pb_encode(&ostream, cavetalk_Encoders_fields, &encoders_message))
         {
@@ -414,7 +429,7 @@ static void CaveTalk_HandleEncoders(const CaveTalk_Handle_t *const handle, const
     size_t            count            = 0U;
 
     encoders_message.encoders.arg          = &count;
-    encoders_message.encoders.funcs.decode = CaveTalk_DecodeRepeatedSubmessage;
+    encoders_message.encoders.funcs.decode = CaveTalk_DecodeRepeatedEncoderSubmessage;
 
     if ((NULL != handle->callbacks.hear_encoders) && pb_decode(&istream, cavetalk_Encoders_fields, &encoders_message))
     {
@@ -457,13 +472,16 @@ static bool CaveTalk_DecodeString(pb_istream_t *stream, const pb_field_t *field,
     return decoded;
 }
 
-static bool CaveTalk_EncodeRepeatedSubmessage(pb_ostream_t *stream, const pb_field_t *field, void *const *arg)
+static bool CaveTalk_EncodeRepeatedEncoderSubmessage(pb_ostream_t *stream, const pb_field_t *field, void *const *arg)
 {
     bool                                encoded      = true;
     const CaveTalk_EncoderList_t *const encoder_list = (const CaveTalk_EncoderList_t *const)*arg;
 
     for (size_t i = 0U; i < encoder_list->count; i++)
     {
+        encoder_list->encoders[i].has_pulses                  = true;
+        encoder_list->encoders[i].has_rate_radians_per_second = true;
+
         if (!pb_encode_tag_for_field(stream, field) || !pb_encode_submessage(stream, cavetalk_Encoder_fields, &encoder_list->encoders[i]))
         {
             encoded = false;
@@ -474,7 +492,7 @@ static bool CaveTalk_EncodeRepeatedSubmessage(pb_ostream_t *stream, const pb_fie
     return encoded;
 }
 
-static bool CaveTalk_DecodeRepeatedSubmessage(pb_istream_t *stream, const pb_field_t *field, void **arg)
+static bool CaveTalk_DecodeRepeatedEncoderSubmessage(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
     CAVETALK_UNUSED(field);
 

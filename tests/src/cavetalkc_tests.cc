@@ -11,7 +11,8 @@ class Callbacks
 {
 public:
     virtual void HearLog(const char *const log) const = 0;
-    virtual void HearArm(const cavetalk_Mode mode) const = 0;
+    virtual void HearSetMode(const cavetalk_Mode mode) const = 0;
+    virtual void HearGetMode(const cavetalk_Mode mode) const = 0;
     virtual void HearDrive(const cavetalk_Drive *const drive) const = 0;
     virtual void HearAcceleration(const cavetalk_Acceleration *const acceleration) const = 0;
     virtual void HearGyroscope(const cavetalk_Gyroscope *const gyroscope) const = 0;
@@ -22,7 +23,8 @@ class MockCallbacks : public Callbacks
 {
 public:
     MOCK_METHOD(void, HearLog, (const char *const log), (const, override));
-    MOCK_METHOD(void, HearArm, (const cavetalk_Mode mode), (const, override));
+    MOCK_METHOD(void, HearSetMode, (const cavetalk_Mode mode), (const, override));
+    MOCK_METHOD(void, HearGetMode, (const cavetalk_Mode mode), (const, override));
     MOCK_METHOD(void, HearDrive, (const cavetalk_Drive *const drive), (const, override));
     MOCK_METHOD(void, HearAcceleration, (const cavetalk_Acceleration *const acceleration), (const, override));
     MOCK_METHOD(void, HearGyroscope, (const cavetalk_Gyroscope *const gyroscope), (const, override));
@@ -37,9 +39,14 @@ protected:
         mock_callbacks_->HearLog(log);
     }
 
-    static void HearArm(const cavetalk_Mode mode)
+    static void HearSetMode(const cavetalk_Mode mode)
     {
-        mock_callbacks_->HearArm(mode);
+        mock_callbacks_->HearSetMode(mode);
+    }
+
+    static void HearGetMode(const cavetalk_Mode mode)
+    {
+        mock_callbacks_->HearGetMode(mode);
     }
 
     static void HearDrive(const cavetalk_Drive *const drive)
@@ -68,6 +75,8 @@ protected:
 
         CaveTalk_Callbacks_t listener_callbacks = kCaveTalk_CallbacksNull;
         listener_callbacks.hear_log = HearLog;
+        listener_callbacks.hear_set_mode = HearSetMode;
+        listener_callbacks.hear_acceleration = HearAcceleration;
         listener_callbacks.hear_encoders = HearEncoders;
 
         CaveTalk_Initialize(&speaker_handle_, &kCaveTalk_CallbacksNull, speaker_id_, speaker_buffer_, sizeof(speaker_buffer_));
@@ -113,6 +122,48 @@ TEST_F(CaveTalkC, SpeakAndHearLog)
     message = CaveTalk_SpeakLog(&speaker_handle_, log_1);
     ASSERT_NE(nullptr, message);
     EXPECT_CALL(*mock_callbacks_, HearLog(testing::StrEq(log_1))).Times(1);
+    CaveTalk_Hear(&listener_handle_, *message);
+}
+
+TEST_F(CaveTalkC, SpeakAndHearMode)
+{
+    CaveTalk_Message_t *message = CaveTalk_SpeakSetMode(&speaker_handle_, cavetalk_Mode_MODE_DISARMED);
+    ASSERT_NE(nullptr, message);
+    EXPECT_CALL(*mock_callbacks_, HearSetMode(testing::Eq(cavetalk_Mode_MODE_DISARMED))).Times(1);
+    CaveTalk_Hear(&listener_handle_, *message);
+
+    message = CaveTalk_SpeakSetMode(&speaker_handle_, cavetalk_Mode_MODE_ARMED_AUTO);
+    ASSERT_NE(nullptr, message);
+    EXPECT_CALL(*mock_callbacks_, HearSetMode(testing::Eq(cavetalk_Mode_MODE_ARMED_AUTO))).Times(1);
+    CaveTalk_Hear(&listener_handle_, *message);
+}
+
+TEST_F(CaveTalkC, SpeakAndHearAcceleration)
+{
+    cavetalk_Acceleration acceleration = {
+        .x_meters_per_second_squared = 0.0f,
+        .y_meters_per_second_squared = 0.0f,
+        .z_meters_per_second_squared = 0.0f,
+    };
+    CaveTalk_Message_t *message = CaveTalk_SpeakAcceleration(&speaker_handle_, &acceleration);
+    ASSERT_NE(nullptr, message);
+    EXPECT_CALL(*mock_callbacks_, HearAcceleration(testing::AllOf(
+                                      testing::Pointee(testing::Field(&cavetalk_Acceleration::x_meters_per_second_squared, 0.0f)),
+                                      testing::Pointee(testing::Field(&cavetalk_Acceleration::y_meters_per_second_squared, 0.0f)),
+                                      testing::Pointee(testing::Field(&cavetalk_Acceleration::z_meters_per_second_squared, 0.0f)))))
+        .Times(1);
+    CaveTalk_Hear(&listener_handle_, *message);
+
+    acceleration.x_meters_per_second_squared = 1.2f;
+    acceleration.y_meters_per_second_squared = 3.4f;
+    acceleration.z_meters_per_second_squared = 5.6f;
+    message = CaveTalk_SpeakAcceleration(&speaker_handle_, &acceleration);
+    ASSERT_NE(nullptr, message);
+    EXPECT_CALL(*mock_callbacks_, HearAcceleration(testing::AllOf(
+                                      testing::Pointee(testing::Field(&cavetalk_Acceleration::x_meters_per_second_squared, 1.2f)),
+                                      testing::Pointee(testing::Field(&cavetalk_Acceleration::y_meters_per_second_squared, 3.4f)),
+                                      testing::Pointee(testing::Field(&cavetalk_Acceleration::z_meters_per_second_squared, 5.6f)))))
+        .Times(1);
     CaveTalk_Hear(&listener_handle_, *message);
 }
 

@@ -83,9 +83,9 @@ void CaveTalk_Hear(const CaveTalk_Handle_t *const handle, const CaveTalk_Message
 CaveTalk_Message_t *CaveTalk_SpeakLog(CaveTalk_Handle_t *const handle, char *const log);
 CaveTalk_Message_t *CaveTalk_SpeakSetMode(CaveTalk_Handle_t *const handle, const cavetalk_Mode mode);
 CaveTalk_Message_t *CaveTalk_SpeakGetMode(CaveTalk_Handle_t *const handle, const cavetalk_Mode mode);
-CaveTalk_Message_t *CaveTalk_SpeakDrive(CaveTalk_Handle_t *const handle, const cavetalk_Drive *const drive);
-CaveTalk_Message_t *CaveTalk_SpeakAcceleration(CaveTalk_Handle_t *const handle, const cavetalk_Acceleration *const acceleration);
-CaveTalk_Message_t *CaveTalk_SpeakGyroscope(CaveTalk_Handle_t *const handle, const cavetalk_Gyroscope *const gyroscope);
+CaveTalk_Message_t *CaveTalk_SpeakDrive(CaveTalk_Handle_t *const handle, cavetalk_Drive *const drive);
+CaveTalk_Message_t *CaveTalk_SpeakAcceleration(CaveTalk_Handle_t *const handle, cavetalk_Acceleration *const acceleration);
+CaveTalk_Message_t *CaveTalk_SpeakGyroscope(CaveTalk_Handle_t *const handle, cavetalk_Gyroscope *const gyroscope);
 CaveTalk_Message_t *CaveTalk_SpeakEncoders(CaveTalk_Handle_t *const handle, cavetalk_Encoder *const encoders, const size_t count);
 
 #ifdef __cplusplus

@@ -3,9 +3,10 @@ syntax = "proto3";
 package cavetalk;
 
 enum Mode {
-    MODE_DISARMED = 0;
-    MODE_ARMED_MANUAL = 1;
-    MODE_ARMED_AUTO = 2;
+    MODE_NONE = 0;
+    MODE_DISARMED = 1;
+    MODE_ARMED_MANUAL = 2;
+    MODE_ARMED_AUTO = 3;
 }
 
 message SetMode {

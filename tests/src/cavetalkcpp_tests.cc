@@ -56,6 +56,54 @@ TEST(CaveTalkCpp, SpeakAndHearLog)
     ASSERT_EQ(log_1, std::get<cavetalk::Log>(parsed_message.value()).log());
 }
 
+TEST(CaveTalkCpp, SpeakAndHearMode)
+{
+    cavetalk::SetMode mode_message;
+    mode_message.set_mode(cavetalk::Mode::MODE_DISARMED);
+    cavetalk::SerializedMessage serialized_message = cavetalk::Speak(kPeer, mode_message);
+    ASSERT_NE(std::nullopt, serialized_message);
+    cavetalk::KeyDataPair key_data = serialized_message.value();
+    cavetalk::ParsedMessage parsed_message = cavetalk::Hear(key_data);
+    ASSERT_NE(std::nullopt, parsed_message);
+    ASSERT_EQ(cavetalk::Mode::MODE_DISARMED, std::get<cavetalk::SetMode>(parsed_message.value()).mode());
+
+    mode_message.set_mode(cavetalk::Mode::MODE_ARMED_AUTO);
+    serialized_message = cavetalk::Speak(kPeer, mode_message);
+    ASSERT_NE(std::nullopt, serialized_message);
+    key_data = serialized_message.value();
+    parsed_message = cavetalk::Hear(key_data);
+    ASSERT_NE(std::nullopt, parsed_message);
+    ASSERT_EQ(cavetalk::Mode::MODE_ARMED_AUTO, std::get<cavetalk::SetMode>(parsed_message.value()).mode());
+}
+
+TEST(CaveTalkCpp, SpeakAndHearAcceleration)
+{
+    cavetalk::Acceleration acceleration_message;
+    acceleration_message.set_x_meters_per_second_squared(0.0f);
+    acceleration_message.set_y_meters_per_second_squared(0.0f);
+    acceleration_message.set_z_meters_per_second_squared(0.0f);
+    cavetalk::SerializedMessage serialized_message = cavetalk::Speak(kPeer, acceleration_message);
+    ASSERT_NE(std::nullopt, serialized_message);
+    cavetalk::KeyDataPair key_data = serialized_message.value();
+    cavetalk::ParsedMessage parsed_message = cavetalk::Hear(key_data);
+    ASSERT_NE(std::nullopt, parsed_message);
+    ASSERT_EQ(0.0f, std::get<cavetalk::Acceleration>(parsed_message.value()).x_meters_per_second_squared());
+    ASSERT_EQ(0.0f, std::get<cavetalk::Acceleration>(parsed_message.value()).y_meters_per_second_squared());
+    ASSERT_EQ(0.0f, std::get<cavetalk::Acceleration>(parsed_message.value()).z_meters_per_second_squared());
+
+    acceleration_message.set_x_meters_per_second_squared(1.2f);
+    acceleration_message.set_y_meters_per_second_squared(3.4f);
+    acceleration_message.set_z_meters_per_second_squared(5.6f);
+    serialized_message = cavetalk::Speak(kPeer, acceleration_message);
+    ASSERT_NE(std::nullopt, serialized_message);
+    key_data = serialized_message.value();
+    parsed_message = cavetalk::Hear(key_data);
+    ASSERT_NE(std::nullopt, parsed_message);
+    ASSERT_EQ(1.2f, std::get<cavetalk::Acceleration>(parsed_message.value()).x_meters_per_second_squared());
+    ASSERT_EQ(3.4f, std::get<cavetalk::Acceleration>(parsed_message.value()).y_meters_per_second_squared());
+    ASSERT_EQ(5.6f, std::get<cavetalk::Acceleration>(parsed_message.value()).z_meters_per_second_squared());
+}
+
 TEST(CaveTalkCpp, SpeakAndHearEncoders)
 {
     cavetalk::Encoders encoders_0;

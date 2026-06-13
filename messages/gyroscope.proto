@@ -3,11 +3,11 @@ syntax = "proto3";
 package cavetalk;
 
 message Gyroscope {
-    float roll_radians_per_second = 1;
-    float pitch_radians_per_second = 2;
-    float yaw_radians_per_second = 3;
-    float w = 4;
-    float x = 5;
-    float y = 6;
-    float z = 7;
+    optional float roll_radians_per_second = 1;
+    optional float pitch_radians_per_second = 2;
+    optional float yaw_radians_per_second = 3;
+    optional float w = 4;
+    optional float x = 5;
+    optional float y = 6;
+    optional float z = 7;
 }
